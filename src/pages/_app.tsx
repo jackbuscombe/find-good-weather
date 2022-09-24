@@ -3,6 +3,7 @@ import { httpBatchLink } from "@trpc/client/links/httpBatchLink";
 import { loggerLink } from "@trpc/client/links/loggerLink";
 import { withTRPC } from "@trpc/next";
 import type { AppType } from "next/dist/shared/lib/utils";
+import { Toaster } from "react-hot-toast";
 import superjson from "superjson";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -15,6 +16,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
 			<Header />
 			<Component {...pageProps} />
 			<Footer />
+			<Toaster />
 		</>
 	);
 };
