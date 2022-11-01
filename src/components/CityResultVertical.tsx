@@ -1,0 +1,256 @@
+import { RiUserLocationLine, RiPlaneLine, RiTrainFill, RiCarFill } from "react-icons/ri";
+import { trpc } from "../utils/trpc";
+import WeatherCell from "./WeatherCell";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useStore } from "./appStore";
+import { Ring } from "@uiball/loaders";
+import { WeatherObject } from "../types";
+
+type Props = {
+	cityName: string;
+	countryName: string;
+	longitude: number;
+	latitude: number;
+	isUserHere?: boolean;
+};
+
+function CityResultVertical({ cityName, latitude, longitude, countryName, isUserHere = false }: Props) {
+	// const { data, isLoading } = trpc.useQuery(["places.getPlaceRapid", { placeName: "Berlin" }]);
+	const [distanceFromUser, setDistanceFromUser] = useState("");
+	const [flightTime, setFlightTime] = useState("");
+	const [transportTime, setTransportTime] = useState("");
+	const [driveTime, setDriveTime] = useState("");
+	const [fetchedCountryName, setFetchedCountryName] = useState("");
+	const [imageUrl, setImageUrl] = useState("");
+	const [mainImageUrl, setMainImageUrl] = useState("");
+	const [timezone, setTimezone] = useState("");
+	// const [latitude, setLatitude] = useState("");
+	// const [longitude, setLongitude] = useState("");
+	const [locationId, setLocationId] = useState("");
+	const [accommodationCount, setAccommodationCount] = useState("");
+	const [airportCount, setAirportCount] = useState("");
+	const [attractionsCount, setAttractionsCount] = useState("");
+	const [neighborhoodCount, setNeighborhoodCount] = useState("");
+	const [restaurantCount, setRestaurantCount] = useState("");
+	const [forecast, setForecast] = useState<WeatherObject[]>();
+	const userCity = useStore((state) => state.userCity);
+	const selectedCityName = useStore((state) => state.selectedCityName);
+	const setSelectedCityName = useStore((state) => state.setSelectedCityName);
+	const selectedCountryName = useStore((state) => state.selectedCountryName);
+	const setSelectedCountryName = useStore((state) => state.setSelectedCountryName);
+	const selectedCityWeatherData = useStore((state) => state.selectedCityWeatherData);
+	const setSelectedCityWeatherData = useStore((state) => state.setSelectedCityWeatherData);
+	const isLocationModalOpen = useStore((state) => state.isLocationModalOpen);
+	const setIsLocationModalOpen = useStore((state) => state.setIsLocationModalOpen);
+	const selectedCityFlightTime = useStore((state) => state.selectedCityFlightTime);
+	const selectedCityTransportTime = useStore((state) => state.selectedCityTransportTime);
+	const selectedCityDriveTime = useStore((state) => state.selectedCityDriveTime);
+	const setSelectedCityFlightTime = useStore((state) => state.setSelectedCityFlightTime);
+	const setSelectedCityTransportTime = useStore((state) => state.setSelectedCityTransportTime);
+	const setSelectedCityDriveTime = useStore((state) => state.setSelectedCityDriveTime);
+	const selectedCityLat = useStore((state) => state.selectedCityLat);
+	const setSelectedCityLat = useStore((state) => state.setSelectedCityLat);
+	const selectedCityLong = useStore((state) => state.selectedCityLong);
+	const setSelectedCityLong = useStore((state) => state.setSelectedCityLong);
+
+	const { data: cityBasicDetails, isLoading: isLoadingCityBasicDetails } = trpc.useQuery(["places.getPlaceBasicDetailsFromCityName", { cityName }], {
+		enabled: !!userCity,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	useEffect(() => {
+		if (!cityBasicDetails) return;
+		setMainImageUrl(cityBasicDetails.mainPhotoUrl);
+	}, [cityBasicDetails]);
+
+	const { data: travelTime, isLoading: isLoadingTravelTime } = trpc.useQuery(["places.getTravelTimeFromCityName", { originCityName: userCity, destinationCityName: cityName }], {
+		enabled: cityName != "" && userCity != "",
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	useEffect(() => {
+		if (!travelTime) return;
+		console.log("Travel time", travelTime);
+		if (travelTime.rows[0].elements[0].status != "ZERO_RESULTS") {
+			setFlightTime(travelTime.rows[0].elements[0].duration.text);
+			setTransportTime(travelTime.rows[0].elements[0].duration.text);
+			setDriveTime(travelTime.rows[0].elements[0].duration.text);
+			setDistanceFromUser(travelTime.rows[0].elements[0].distance.text);
+		} else {
+			setFlightTime("Cannot fly");
+			setTransportTime("Cannot catch train/bus");
+			setDriveTime("Cannot drive");
+		}
+	}, [travelTime]);
+
+	const { isLoading, data: locationForecast } = trpc.useQuery(["forecast.getForecast", { latitude, longitude }], {
+		enabled: !!latitude && !!longitude,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	useEffect(() => {
+		if (!longitude || !latitude) return;
+		console.log("The longitude is", longitude);
+		console.log("The latitude is", latitude);
+	}, [longitude, latitude]);
+
+	useEffect(() => {
+		if (!locationForecast) return;
+		console.log("This is the location forecast", locationForecast);
+		const forecastArray = [];
+		for (let i = 0; i < locationForecast.list.length; i++) {
+			// 	if (locationForecast.list[i].dt_txt.includes("00:00:00") && i < 30) {
+			// 		let dailyCountingTemp = 0;
+			// 		let dailyMinTemp = 0;
+			// 		let dailyMaxTemp = 999999;
+			// 		for (let j = 0; j < 9; j++) {
+			// 			dailyCountingTemp = dailyCountingTemp + locationForecast.list[i + j].main.temp;
+			// 			if (locationForecast.list[i + j].main.temp_min < dailyMinTemp) {
+			// 				dailyMinTemp = locationForecast.list[i + j].main.temp_min;
+			// 			}
+			// 			if (locationForecast.list[i + j].main.temp_max < dailyMaxTemp) {
+			// 				dailyMaxTemp = locationForecast.list[i + j].main.temp_max;
+			// 			}
+			// 		}
+			// 		dailyCountingTemp = dailyCountingTemp / 8;
+
+			// 		forecastArray.push({
+			// 			temp: dailyCountingTemp,
+			// 			tempMin: dailyMinTemp,
+			// 			tempMax: dailyMaxTemp,
+			// 			feelsLike: locationForecast.list[i + 5].main.feels_like,
+			// 			humidity: locationForecast.list[i + 5].main.humidity,
+			// 			description: locationForecast.list[i + 5].weather[0].main,
+			// 			windSpeed: locationForecast.list[i + 5].wind.speed,
+			// 			icon: `http://openweathermap.org/img/w/${locationForecast.list[i + 5].weather[0].icon}.png`,
+			// 			timestamp: locationForecast.list[i + 5].dt,
+			// 		});
+			// 	}
+			if (locationForecast.list[i].dt_txt.includes("15:00:00")) {
+				forecastArray.push({
+					temp: locationForecast.list[i].main.temp,
+					tempMin: locationForecast.list[i].main.temp_min,
+					tempMax: locationForecast.list[i].main.temp_max,
+					feelsLike: locationForecast.list[i].main.feels_like,
+					humidity: locationForecast.list[i].main.humidity,
+					description: locationForecast.list[i].weather[0].main,
+					windSpeed: locationForecast.list[i].wind.speed,
+					icon: `http://openweathermap.org/img/w/${locationForecast.list[i].weather[0].icon}.png`,
+					timestamp: locationForecast.list[i].dt,
+				});
+			}
+		}
+		console.log("The forecast array is: ", forecastArray);
+		setForecast(forecastArray);
+	}, [locationForecast]);
+
+	const { isLoading: isLoadingLocationDetails, data: locationDetails } = trpc.useQuery(["places.getPlaceDetailsFromCityName", { selectedCityName: cityName }], {
+		enabled: !!cityName,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	useEffect(() => {
+		if (!locationDetails) return;
+		setFetchedCountryName(locationDetails);
+	}, [locationDetails]);
+
+	// useEffect(() => {
+	// 	if (!cityName) return;
+
+	// 	const options = {
+	// 		method: "GET",
+	// 		url: "https://travel-advisor.p.rapidapi.com/locations/search",
+	// 		params: {
+	// 			query: cityName,
+	// 			limit: "1",
+	// 			offset: "0",
+	// 			units: "km",
+	// 			location_id: "1",
+	// 			currency: "USD",
+	// 			sort: "relevance",
+	// 			lang: "en_US",
+	// 		},
+	// 		headers: {
+	// 			"X-RapidAPI-Key": process.env.NEXT_PUBLIC_X_RAPIDAPI_KEY as string,
+	// 			"X-RapidAPI-Host": process.env.NEXT_PUBLIC_X_RAPIDAPI_HOST_TRAVEL_ADVISOR as string,
+	// 		},
+	// 	};
+
+	// 	axios
+	// 		.request(options)
+	// 		.then(function (response) {
+	// 			console.log(response.data);
+	// 			setLocationId(response.data.data[0].result_object.location_id);
+	// 			setImageUrl(response.data.data[0].result_object.photo.images.large.url);
+	// 			setTimezone(response.data.data[0].result_object.timezone);
+	// 			setLatitude(response.data.data[0].result_object.latitude);
+	// 			setLongitude(response.data.data[0].result_object.longitude);
+	// 			setAccommodationCount(response.data.data[0].result_object.category_counts.accommodations.total);
+	// 			setAirportCount(response.data.data[0].result_object.category_counts.airports);
+	// 			setAttractionsCount(response.data.data[0].result_object.category_counts.attractions.total);
+	// 			setNeighborhoodCount(response.data.data[0].result_object.category_counts.neighborhoods);
+	// 			setRestaurantCount(response.data.data[0].result_object.category_counts.restaurants.total);
+	// 			return response.data;
+	// 		})
+	// 		.catch(function (error) {
+	// 			console.error(error);
+	// 			return;
+	// 		});
+	// }, [cityName]);
+
+	return (
+		<div key={cityName} className={`grid grid-rows-2 p-4 rounded border space-y-2 shadow transition transform ease-in-out ${isUserHere && "bg-blue-50 hover:bg-blue-200"} ${!isUserHere && "hover:bg-gray-50"}`}>
+			{isLoadingCityBasicDetails ? <Ring /> : <img src={mainImageUrl != "" ? mainImageUrl : "/no-image-placeholder.jpg"} alt={cityName} className="row-span-1 w-full h-28 object-cover rounded self-center shadow" />}
+			<div className="row-span-1">
+				<h2 className="text-xl font-black">{cityName}</h2>
+				<h3 className="text-gray-500">{fetchedCountryName}</h3>
+				{isUserHere ? (
+					<div className="flex items-center space-x-4 font-bold text-blue-500 my-4">
+						<RiUserLocationLine size={20} />
+						<p>You are here now</p>
+					</div>
+				) : (
+					<div className="flex flex-col justify-center my-4">
+						{/* <div className="flex items-center space-x-2">
+						<RiPlaneLine />
+						<p className="text-gray-500 text-lg">{flightTime}</p>
+					</div>
+					<div className="flex items-center space-x-2">
+						<RiTrainFill />
+						<p className="text-gray-500 text-lg">{transportTime}</p>
+					</div> */}
+						<div className="flex items-center space-x-2">
+							<RiCarFill />
+							<p className="text-gray-500">{driveTime}</p>
+						</div>
+						<div className="flex items-center space-x-2">
+							<p className="text-gray-500">({distanceFromUser})</p>
+						</div>
+					</div>
+				)}
+			</div>
+			<button
+				onClick={() => {
+					setSelectedCityName(cityName);
+					setSelectedCountryName(fetchedCountryName);
+					setSelectedCityLat(latitude);
+					setSelectedCityLong(longitude);
+					setSelectedCityDriveTime(driveTime);
+					setSelectedCityWeatherData(forecast ?? []);
+					setIsLocationModalOpen(true);
+				}}
+				className={`row-span-1 text-blue-500 font-bold shadow rounded h-12 ${isUserHere ? "bg-gray-100 hover:bg-gray-200" : "bg-blue-100 hover:bg-blue-200"}`}
+			>
+				BOOK
+			</button>
+
+			{isLoading ? <Ring /> : <div className="row-span-1">{forecast && forecast.map(({ temp, tempMin, tempMax, feelsLike, humidity, windSpeed, description, icon, timestamp }, i) => <WeatherCell key={i} temp={temp} tempMin={tempMin} tempMax={tempMax} feelsLike={feelsLike} humidity={humidity} windSpeed={windSpeed} description={description} icon={icon} timestamp={timestamp} />)}</div>}
+		</div>
+	);
+}
+export default CityResultVertical;

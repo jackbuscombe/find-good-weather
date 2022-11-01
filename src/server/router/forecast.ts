@@ -10,7 +10,7 @@ export const forecastRouter = createRouter()
 		}),
 		async resolve({ input }) {
 			try {
-				const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${input.latitude}&lon=${input.longitude}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}&units=metric`);
+				const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${input.latitude}&lon=${input.longitude}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric`);
 				return response.data;
 			} catch (error) {
 				console.log("Error Fetching Forecast", error);
@@ -25,7 +25,7 @@ export const forecastRouter = createRouter()
 		async resolve({ input }) {
 			try {
 				// Must convert result from google map to lat and long
-				const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${input.locationName}&lon=${input.locationName}&appid=${process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY}&units=metric`);
+				const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${input.locationName}&lon=${input.locationName}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric`);
 				return response.data;
 			} catch (error) {
 				console.log("Error Fetching Forecast", error);

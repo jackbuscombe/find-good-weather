@@ -1,22 +1,27 @@
 import Link from "next/link";
 import { GiForwardSun } from "react-icons/gi";
-import { TbBrandFacebook, TbBrandInstagram, TbBrandTwitter } from "react-icons/tb";
-import { ActionIcon } from "@mantine/core";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useStore } from "../components/appStore";
 import { trpc } from "../utils/trpc";
+import SharingLinks from "./SharingLinks";
+import { TbSun } from "react-icons/tb";
+import { Switch } from "@mantine/core";
+import { FaFacebook, FaLinkedin } from "react-icons/fa";
+import SearchForm from "./SearchForm";
 
 function Header() {
 	const [currentLatitude, setCurrentLatitude] = useState<number>(0);
 	const [currentLongitude, setCurrentLongitude] = useState<number>(0);
 	const [userCityName, setUserCityName] = useState<string>("");
+	const celsius = useStore((state) => state.celsius);
 	const userLat = useStore((state) => state.userLat);
 	const userLong = useStore((state) => state.userLong);
 	const userCity = useStore((state) => state.userCity);
 	const userWeather = useStore((state) => state.userWeather);
 	const userTemp = useStore((state) => state.userTemp);
+	const setCelsius = useStore((state) => state.setCelsius);
 	const setUserLat = useStore((state) => state.setUserLat);
 	const setUserLong = useStore((state) => state.setUserLong);
 	const setUserCity = useStore((state) => state.setUserCity);
@@ -39,28 +44,33 @@ function Header() {
 	}, []);
 
 	return (
-		<div className="w-full bg-blue-400 flex py-4 px-12 justify-between items-center">
-			<Link href="/">
-				<div className="flex items-center space-x-4 text-xl font-extrabold cursor-pointer">
-					<GiForwardSun className="text-yellow-400 text-4xl" />
-					<p className="text-white">FIND GOOD WEATHER</p>
+		<header className="bg-[#445fc8] space-y-8 font-mono">
+			<div className="w-full flex py-4 px-12 justify-between items-center">
+				<Link href="/">
+					<div className="flex items-center space-x-4 text-xl font-semibold cursor-pointer">
+						<TbSun className="text-yellow-400 text-4xl" />
+						<p className="text-white">Find good weather</p>
+					</div>
+				</Link>
+
+				{/* <p className="text-white font-semibold">{`${userCity ?? "Current Location"}: ${userWeather} ${userTemp?.toFixed(0)}°C`}</p> */}
+				<div className="flex space-x-16 text-white">
+					<div className="flex items-center space-x-6">
+						<p>Share social</p>
+						<FaFacebook className="text-2xl cursor-pointer hover:text-gray-400" />
+						<FaLinkedin className="text-2xl cursor-pointer hover:text-gray-400" />
+					</div>
+					<div className="flex items-center space-x-4 cursor-pointer">
+						<p className="cursor-pointer">°F</p>
+						<Switch checked={celsius} onChange={(event) => setCelsius(event.currentTarget.checked)} color="dark" size="lg" thumbIcon={celsius ? <p className="text-green-500 font-bold cursor-pointer">°C</p> : <p className="text-green-500 font-bold cursor-pointer">°F</p>} />
+						<p className="cursor-pointer">°C</p>
+					</div>
 				</div>
-			</Link>
-
-			<p className="text-white font-semibold">{`${userCity ?? "Current Location"}: ${userWeather} ${userTemp?.toFixed(0)}°C`}</p>
-
-			<div className="flex space-x-4 text-white items-center">
-				<ActionIcon variant="filled" size="lg" color={"blue"}>
-					<TbBrandFacebook className="cursor-pointer hover:font-bold" />
-				</ActionIcon>
-				<ActionIcon variant="filled" size="lg" color={"blue"}>
-					<TbBrandInstagram className="cursor-pointer hover:font-bold" />
-				</ActionIcon>
-				<ActionIcon variant="filled" size="lg" color={"blue"}>
-					<TbBrandTwitter className="cursor-pointer hover:font-bold" />
-				</ActionIcon>
 			</div>
-		</div>
+			<div className="flex flex-col items-center w-full text-white text-4xl pb-20">
+				<h1 className="font-mono">{`Let's find some good weather`}</h1>
+			</div>
+		</header>
 	);
 }
 export default Header;

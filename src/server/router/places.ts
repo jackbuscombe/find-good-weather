@@ -1,0 +1,207 @@
+import { createRouter } from "./context";
+import { z } from "zod";
+import axios from "axios";
+
+export const placesRouter = createRouter()
+	.query("getPlaceRapid", {
+		input: z.object({
+			placeName: z.string(),
+		}),
+		async resolve({ input }) {
+			const options = {
+				method: "GET",
+				url: "https://travel-advisor.p.rapidapi.com/locations/search",
+				params: {
+					query: input.placeName,
+					limit: "2",
+					offset: "0",
+					units: "km",
+					location_id: "1",
+					currency: "USD",
+					sort: "relevance",
+					lang: "en_US",
+				},
+				headers: {
+					"X-RapidAPI-Key": process.env.X_RAPIDAPI_KEY as string,
+					"X-RapidAPI-Host": process.env.X_RAPIDAPI_HOST_TRAVEL_ADVISOR as string,
+				},
+			};
+
+			axios
+				.request(options)
+				.then(function (response) {
+					console.log(response.data);
+					return response.data;
+				})
+				.catch(function (error) {
+					console.error(error);
+					return;
+				});
+		},
+	})
+	.query("getPlaceBasicDetailsFromCityName", {
+		input: z.object({
+			cityName: z.string(),
+		}),
+		async resolve({ input }) {
+			try {
+				const place = await axios.get(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(input.cityName.trim())}&inputtype=textquery&fields=place_id%2Cphoto&key=${process.env.GOOGLE_MAPS_API}`);
+				const placeId = place.data.candidates[0].place_id;
+				const mainPhotoRef = place.data.candidates[0].photos[0].photo_reference;
+				let mainPhotoUrl = "";
+				await axios
+					.get(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${mainPhotoRef}&key=${process.env.GOOGLE_MAPS_API}`)
+					.then(function (response) {
+						mainPhotoUrl = response.request.res.responseUrl;
+					})
+					.catch(function (error) {
+						console.log("Error fetching basic city details", error);
+					});
+				return {
+					placeId,
+					mainPhotoUrl,
+				};
+			} catch (error) {
+				console.log("Error fetching basic city details", error);
+			}
+		},
+	})
+	.query("getPlaceImagesFromCityName", {
+		input: z.object({
+			selectedCityName: z.string(),
+		}),
+		async resolve({ input }) {
+			try {
+				const placeSearch = await axios.get(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(input.selectedCityName.trim())}&inputtype=textquery&fields=place_id%2Cphoto%2Cgeometry&key=${process.env.GOOGLE_MAPS_API}`);
+				const placeId = placeSearch.data.candidates[0].place_id;
+				const placeDetails = await axios.get(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name%2Cphoto&key=${process.env.GOOGLE_MAPS_API}`);
+				const photosArray = placeDetails.data.result.photos;
+				const photosReferenceArray = [];
+				for (let i = 0; i < photosArray.length; i++) {
+					photosReferenceArray.push(photosArray[i].photo_reference);
+				}
+				const photosUrlArray: string[] = [];
+				for (let i = 0; i < (photosReferenceArray.length < 6 ? photosReferenceArray.length : 6); i++) {
+					await axios
+						.get(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photosReferenceArray[i]}&key=${process.env.GOOGLE_MAPS_API}`)
+						.then(function (response) {
+							photosUrlArray.push(response.request.res.responseUrl);
+						})
+						.catch(function (error) {
+							console.log("Error fetching photo", error);
+						});
+				}
+				return photosUrlArray;
+			} catch (error) {
+				console.log("Error fetching city photos", error);
+			}
+		},
+	})
+	.query("getPlaceDetailsFromCityName", {
+		input: z.object({
+			selectedCityName: z.string(),
+		}),
+		async resolve({ input }) {
+			try {
+				const placeSearch = await axios.get(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(input.selectedCityName.trim())}&inputtype=textquery&fields=place_id%2Cphoto%2Cgeometry&key=${process.env.GOOGLE_MAPS_API}`);
+				const placeId = placeSearch.data.candidates[0].place_id;
+				const placeDetails = await axios.get(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name%2Cphoto%2Caddress_component&key=${process.env.GOOGLE_MAPS_API}`);
+				const countryName = placeDetails.data.result.address_components[placeDetails.data.result.address_components.length - 1].long_name;
+				return countryName;
+				// const photosArray = placeDetails.data.result.photos;
+				// const photosReferenceArray = [];
+				// for (let i = 0; i < photosArray.length; i++) {
+				// 	photosReferenceArray.push(photosArray[i].photo_reference);
+				// }
+				// const photosUrlArray: string[] = [];
+				// for (let i = 0; i < (photosReferenceArray.length < 6 ? photosReferenceArray.length : 6); i++) {
+				// 	await axios
+				// 		.get(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photosReferenceArray[i]}&key=${process.env.GOOGLE_MAPS_API}`)
+				// 		.then(function (response) {
+				// 			photosUrlArray.push(response.request.res.responseUrl);
+				// 		})
+				// 		.catch(function (error) {
+				// 			console.log("Error fetching photo", error);
+				// 		});
+				// }
+			} catch (error) {
+				console.log("Error fetching city photos", error);
+			}
+		},
+	})
+	.query("getTravelTimeFromCityName", {
+		input: z.object({
+			// userLat: z.number(),
+			// userLong: z.number(),
+			// destinationLat: z.number(),
+			// destinationLong: z.number(),
+			originCityName: z.string(),
+			destinationCityName: z.string(),
+		}),
+		async resolve({ input }) {
+			try {
+				const distanceSearch = await axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(input.originCityName.trim())}&destinations=${encodeURIComponent(input.destinationCityName.trim())}&units=imperial&key=${process.env.GOOGLE_MAPS_API}`);
+				return distanceSearch.data;
+			} catch (error) {
+				console.log("Error fetching travel time", error);
+			}
+		},
+	})
+	.query("getCityFromLatLong", {
+		input: z.object({
+			lat: z.number(),
+			long: z.number(),
+		}),
+		async resolve({ input }) {
+			try {
+				const reverseGeocode = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json?result_type=locality&latlng=${input.lat},${input.long}&key=${process.env.GOOGLE_MAPS_API}`);
+				return {
+					fullLocationName: reverseGeocode.data.results[0].formatted_address,
+					cityName: reverseGeocode.data.results[0].address_components[0].long_name,
+					countryName: reverseGeocode.data.results[0].address_components[reverseGeocode.data.results[0].address_components.length - 1].long_name,
+					placeId: reverseGeocode.data.results[0].place_id,
+				};
+			} catch (error) {
+				console.log("Error fetching city", error);
+			}
+		},
+	})
+	.query("getNearbyCities", {
+		input: z.object({
+			isoCoords: z.string(),
+		}),
+		async resolve({ input }) {
+			try {
+				const options = {
+					method: "GET",
+					url: `https://wft-geo-db.p.rapidapi.com/v1/geo/locations/${input.isoCoords}/nearbyCities`,
+					params: { radius: "100" },
+					headers: {
+						"X-RapidAPI-Key": process.env.X_RAPIDAPI_KEY as string,
+						"X-RapidAPI-Host": process.env.X_RAPIDAPI_HOST_GEO_DB as string,
+					},
+				};
+				const result = await axios.request(options);
+				const nearbyCitiesArray = [];
+				for (let i = 1; i < result.data.data.length; i++) {
+					nearbyCitiesArray.push({
+						cityName: result.data.data[i].name,
+						countryName: result.data.data[i].country,
+						distance: result.data.data[i].distance,
+						lat: result.data.data[i].latitude,
+						long: result.data.data[i].longitude,
+						population: result.data.data[i].population,
+						imageUrl: "https://google.com",
+						flightTime: 600,
+						transportTime: 800,
+						driveTime: 700,
+						weatherData: [10, 20, 50, 90],
+						isUserHere: false,
+					});
+				}
+				return nearbyCitiesArray;
+			} catch (error) {
+				console.log("Error fetching nearby cities", error);
+			}
+		},
+	});
