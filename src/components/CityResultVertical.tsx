@@ -74,11 +74,11 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 	useEffect(() => {
 		if (!travelTime) return;
 		console.log("Travel time", travelTime);
-		if (travelTime.rows[0].elements[0].status != "ZERO_RESULTS") {
-			setFlightTime(travelTime.rows[0].elements[0].duration.text);
-			setTransportTime(travelTime.rows[0].elements[0].duration.text);
-			setDriveTime(travelTime.rows[0].elements[0].duration.text);
-			setDistanceFromUser(travelTime.rows[0].elements[0].distance.text);
+		if (travelTime?.rows?.[0]?.elements?.[0]?.status != "ZERO_RESULTS") {
+			setFlightTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
+			setTransportTime(travelTime?.rows[0]?.elements?.[0]?.duration?.text);
+			setDriveTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
+			setDistanceFromUser(travelTime?.rows?.[0]?.elements?.[0]?.distance?.text);
 		} else {
 			setFlightTime("Cannot fly");
 			setTransportTime("Cannot catch train/bus");

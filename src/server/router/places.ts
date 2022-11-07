@@ -171,6 +171,7 @@ export const placesRouter = createRouter()
 			isoCoords: z.string(),
 		}),
 		async resolve({ input }) {
+			console.log("The isoCoords are", input.isoCoords);
 			try {
 				const options = {
 					method: "GET",
@@ -201,7 +202,7 @@ export const placesRouter = createRouter()
 				}
 				return nearbyCitiesArray;
 			} catch (error) {
-				console.log("Error fetching nearby cities", error);
+				// console.log("Error fetching nearby cities", error);
 			}
 		},
 	});
