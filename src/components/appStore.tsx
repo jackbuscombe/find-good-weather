@@ -2,6 +2,22 @@ import { add } from "date-fns";
 import create from "zustand";
 import { WeatherObject } from "../types";
 
+type NearbyCity = {
+	cityName: string;
+	countryName: string;
+	distance: number;
+	driveTime: number;
+	flightTime: number;
+	imageUrl: string;
+	isUserHere: boolean;
+	lat: number;
+	long: number;
+	population: number;
+	transportTime: number;
+	weatherData: number[];
+	cityId: string;
+};
+
 type State = {
 	selectedCityName: string;
 	selectedCountryName: string;
@@ -28,6 +44,7 @@ type State = {
 	selectedCityLat: number;
 	selectedCityLong: number;
 	isLocationModalOpen: boolean;
+	nearbyCitiesArray: NearbyCity[];
 	setSelectedCityName: (cityName: string) => void;
 	setSelectedCountryName: (countryName: string) => void;
 	setSelectedLocationId: (locationId: string) => void;
@@ -53,6 +70,7 @@ type State = {
 	setSelectedCityLat: (latitude: number) => void;
 	setSelectedCityLong: (longitude: number) => void;
 	setIsLocationModalOpen: (isOpen: boolean) => void;
+	setNearbyCitiesArray: (array: NearbyCity[]) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -81,6 +99,7 @@ export const useStore = create<State>((set) => ({
 	selectedCityLat: 0,
 	selectedCityLong: 0,
 	isLocationModalOpen: false,
+	nearbyCitiesArray: [],
 	setSelectedCityName: (cityName) => set({ selectedCityName: cityName }),
 	setSelectedCountryName: (countryName) => set({ selectedCountryName: countryName }),
 	setSelectedLocationId: (locationId) => set({ selectedLocationId: locationId }),
@@ -106,4 +125,5 @@ export const useStore = create<State>((set) => ({
 	setSelectedCityLat: (latitude) => set({ selectedCityLat: latitude }),
 	setSelectedCityLong: (longitude) => set({ selectedCityLong: longitude }),
 	setIsLocationModalOpen: (isOpen) => set({ isLocationModalOpen: isOpen }),
+	setNearbyCitiesArray: (array) => set({ nearbyCitiesArray: array }),
 }));

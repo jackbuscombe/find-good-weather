@@ -9,3 +9,11 @@ export type WeatherObject = {
 	timestamp: number;
 	windSpeed: number;
 };
+
+export type YahooWeatherObject = {
+	day: string;
+	date: number;
+	low: number;
+	high: number;
+	text: string;
+};

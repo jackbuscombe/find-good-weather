@@ -10,8 +10,8 @@ import { BiUser, BiChevronDown } from "react-icons/bi";
 import { RiSunFoggyLine, RiSettingsLine, RiCloseLine } from "react-icons/ri";
 import { TbLayoutList, TbMap } from "react-icons/tb";
 import { MdOutlineLocationOn } from "react-icons/md";
-import { AiOutlineCalendar } from "react-icons/ai";
-import { Select } from "@mantine/core";
+import { AiOutlineCalendar, AiOutlineHome } from "react-icons/ai";
+import { Select, Tooltip } from "@mantine/core";
 import ResultsTable from "../components/ResultsTable";
 import { useJsApiLoader, GoogleMap, Autocomplete, Marker, DirectionsRenderer } from "@react-google-maps/api";
 import { useStore } from "../components/appStore";
@@ -20,15 +20,18 @@ import SettingsDropdown from "./SettingsDropdown";
 import SearchFieldPeople from "./SearchFields/SearchFieldPeople";
 import SearchFieldDesiredWeather from "./SearchFields/SearchFieldDesiredWeather";
 import { format } from "date-fns";
+import coordinatesToISO from "../utils/coordinatesToISO";
 
 type Props = {
 	className?: string;
+	refetch: any;
 };
 
-function SearchForm({ className }: Props) {
+function SearchForm({ className, refetch }: Props) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	const userLat = useStore((state) => state.userLat);
 	const userLong = useStore((state) => state.userLong);
+	const userCity = useStore((state) => state.userCity);
 	const viewType = useStore((state) => state.viewType);
 	const setViewType = useStore((state) => state.setViewType);
 	const [isDatepickerOpen, setIsDatepickerOpen] = useState(false);
@@ -124,50 +127,34 @@ function SearchForm({ className }: Props) {
 		}
 	};
 
+	const setToUserLocation = () => {
+		setSelectedCityLat(userLat);
+		setSelectedCityLong(userLong);
+	};
+
+	useEffect(() => {
+		if (!userCity) return;
+	}, [userCity]);
+
 	return (
 		<div className="z-30">
 			<div className={`flex space-x-4 items-center md:border-2 p-4 rounded-lg font-mono md:shadow-sm bg-white whitespace-nowrap ${className}`}>
 				{isLoaded && (
 					<SearchFormField title="Where" icon={<MdOutlineLocationOn className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />}>
 						<Autocomplete onPlaceChanged={onPlaceChanged} onLoad={onLoad} fields={["place_id", "geometry", "address_components", "name"]}>
-							<input ref={destinationRef} className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer" type="text" placeholder={searchInput || "Start your search"} />
+							<div className="flex space-x-4">
+								<input ref={destinationRef} className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer truncate" type="text" placeholder={searchInput || userCity} />
+
+								<div onClick={setToUserLocation} className="text-gray-500 bg-gray-200 hover:bg-gray-100 p-2 rounded-full cursor-pointer transition transform ease-in-out">
+									<AiOutlineHome />
+								</div>
+							</div>
 						</Autocomplete>
 					</SearchFormField>
 				)}
 
 				<SearchFormField title="Desired Weather" icon={<RiSunFoggyLine className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />}>
 					<SearchFieldDesiredWeather options={["clear", "rainy", "snow"]} />
-				</SearchFormField>
-
-				<SearchFormField title="People" icon={<BiUser className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />}>
-					<SearchFieldPeople
-						options={[
-							{
-								value: 1,
-								label: "1 Adult",
-							},
-							{
-								value: 2,
-								label: "2 Adults",
-							},
-							{
-								value: 3,
-								label: "3 Adults",
-							},
-							{
-								value: 4,
-								label: "4 Adults",
-							},
-							{
-								value: 5,
-								label: "5 Adults",
-							},
-							{
-								value: 6,
-								label: "6 Adults",
-							},
-						]}
-					/>
 				</SearchFormField>
 
 				<div ref={datepickerWrapperRef}>
@@ -194,18 +181,23 @@ function SearchForm({ className }: Props) {
 					</SearchFormField>
 				</div>
 
-				<button
+				{/* <button
 					onClick={() => {
-						setIsLocationModalOpen(true);
+						refetch();
 					}}
 					className="bg-blue-500 text-white p-4 text-lg font-bold hover:bg-blue-600"
 				>
 					SHOW ME
-				</button>
+				</button> */}
 
-				<div onClick={() => setIsSettingsOpen(!isSettingsOpen)} className={`text-gray-500 ${isSettingsOpen ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-100 hover:bg-gray-200"} text-2xl p-4 cursor-pointer`}>
-					{isSettingsOpen ? <RiCloseLine /> : <RiSettingsLine />}
-				</div>
+				<Tooltip label="Our algorithm draws nearby cities with a population over 90,000" withArrow>
+					<div className={`flex justify-center items-center text-white bg-[#445fc8] hover:bg-blue-400 h-8 w-8 rounded-full cursor-default transition transform ease-in-out`}>
+						<p>i</p>
+					</div>
+					{/* <div onClick={() => setIsSettingsOpen(!isSettingsOpen)} className={`text-gray-500 ${isSettingsOpen ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-100 hover:bg-gray-200"} text-2xl p-4 cursor-pointer`}>
+						{isSettingsOpen ? <RiCloseLine /> : <RiSettingsLine />}
+					</div> */}
+				</Tooltip>
 			</div>
 
 			<div ref={settingsWrapperRef} className="relative">

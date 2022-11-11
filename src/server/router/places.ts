@@ -1,5 +1,5 @@
 import { createRouter } from "./context";
-import { z } from "zod";
+import { number, z } from "zod";
 import axios from "axios";
 
 export const placesRouter = createRouter()
@@ -97,35 +97,37 @@ export const placesRouter = createRouter()
 			}
 		},
 	})
-	.query("getPlaceDetailsFromCityName", {
+	.query("getPlaceDetailsFromCityId", {
 		input: z.object({
-			selectedCityName: z.string(),
+			cityId: z.string(),
 		}),
 		async resolve({ input }) {
 			try {
-				const placeSearch = await axios.get(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(input.selectedCityName.trim())}&inputtype=textquery&fields=place_id%2Cphoto%2Cgeometry&key=${process.env.GOOGLE_MAPS_API}`);
-				const placeId = placeSearch.data.candidates[0].place_id;
-				const placeDetails = await axios.get(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name%2Cphoto%2Caddress_component&key=${process.env.GOOGLE_MAPS_API}`);
-				const countryName = placeDetails.data.result.address_components[placeDetails.data.result.address_components.length - 1].long_name;
-				return countryName;
-				// const photosArray = placeDetails.data.result.photos;
-				// const photosReferenceArray = [];
-				// for (let i = 0; i < photosArray.length; i++) {
-				// 	photosReferenceArray.push(photosArray[i].photo_reference);
-				// }
-				// const photosUrlArray: string[] = [];
-				// for (let i = 0; i < (photosReferenceArray.length < 6 ? photosReferenceArray.length : 6); i++) {
-				// 	await axios
-				// 		.get(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photosReferenceArray[i]}&key=${process.env.GOOGLE_MAPS_API}`)
-				// 		.then(function (response) {
-				// 			photosUrlArray.push(response.request.res.responseUrl);
-				// 		})
-				// 		.catch(function (error) {
-				// 			console.log("Error fetching photo", error);
-				// 		});
-				// }
+				const options = {
+					method: "GET",
+					url: `https://wft-geo-db.p.rapidapi.com/v1/geo/cities/${input.cityId}`,
+					headers: {
+						"X-RapidAPI-Key": process.env.X_RAPIDAPI_KEY as string,
+						"X-RapidAPI-Host": process.env.X_RAPIDAPI_HOST_GEO_DB as string,
+					},
+				};
+
+				const result = await axios.request(options);
+				const cityDetails = {
+					city: result.data.city,
+					cityName: result.data.name,
+					type: result.data.type,
+					countryName: result.data.countryName,
+					countryCode: result.data.countryCode,
+					region: result.data.region,
+					regionCode: result.data.regionCode,
+					latitude: result.data.latitude,
+					longitude: result.data.longitude,
+					population: result.data.population,
+				};
+				return cityDetails;
 			} catch (error) {
-				console.log("Error fetching city photos", error);
+				// console.log("Error fetching city details", error);
 			}
 		},
 	})
@@ -141,6 +143,23 @@ export const placesRouter = createRouter()
 		async resolve({ input }) {
 			try {
 				const distanceSearch = await axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(input.originCityName.trim())}&destinations=${encodeURIComponent(input.destinationCityName.trim())}&units=imperial&key=${process.env.GOOGLE_MAPS_API}`);
+				return distanceSearch.data;
+			} catch (error) {
+				console.log("Error fetching travel time", error);
+			}
+		},
+	})
+	.query("getTravelTimeFromLatLong", {
+		input: z.object({
+			userLat: z.number(),
+			userLong: z.number(),
+			destinationLat: z.number(),
+			destinationLong: z.number(),
+		}),
+		async resolve({ input }) {
+			try {
+				const distanceSearch = await axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${input.userLat}%2C${input.userLong}&destinations=${input.destinationLat}${input.destinationLong}&key=${process.env.GOOGLE_MAPS_API}`);
+				console.log("The newest travel time is ", distanceSearch.data);
 				return distanceSearch.data;
 			} catch (error) {
 				console.log("Error fetching travel time", error);
@@ -176,7 +195,13 @@ export const placesRouter = createRouter()
 				const options = {
 					method: "GET",
 					url: `https://wft-geo-db.p.rapidapi.com/v1/geo/locations/${input.isoCoords}/nearbyCities`,
-					params: { radius: "100" },
+					params: {
+						radius: "100",
+						minPopulation: "90000",
+						distanceUnit: "MI",
+						sort: "population",
+						types: "CITY",
+					},
 					headers: {
 						"X-RapidAPI-Key": process.env.X_RAPIDAPI_KEY as string,
 						"X-RapidAPI-Host": process.env.X_RAPIDAPI_HOST_GEO_DB as string,
@@ -184,8 +209,9 @@ export const placesRouter = createRouter()
 				};
 				const result = await axios.request(options);
 				const nearbyCitiesArray = [];
-				for (let i = 1; i < result.data.data.length; i++) {
+				for (let i = result.data.data.length - 1; i >= 0; i--) {
 					nearbyCitiesArray.push({
+						cityId: result.data.data[i].wikiDataId,
 						cityName: result.data.data[i].name,
 						countryName: result.data.data[i].country,
 						distance: result.data.data[i].distance,
@@ -203,6 +229,38 @@ export const placesRouter = createRouter()
 				return nearbyCitiesArray;
 			} catch (error) {
 				// console.log("Error fetching nearby cities", error);
+			}
+		},
+	})
+	.query("getPlaceDetailsFromCityName", {
+		input: z.object({
+			selectedCityName: z.string(),
+		}),
+		async resolve({ input }) {
+			try {
+				const placeSearch = await axios.get(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(input.selectedCityName.trim())}&inputtype=textquery&fields=place_id%2Cphoto%2Cgeometry&key=${process.env.GOOGLE_MAPS_API}`);
+				const placeId = placeSearch.data.candidates[0].place_id;
+				const placeDetails = await axios.get(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name%2Cphoto%2Caddress_component&key=${process.env.GOOGLE_MAPS_API}`);
+				const countryName = placeDetails.data.result.address_components[placeDetails.data.result.address_components.length - 1].long_name;
+				return countryName;
+				// const photosArray = placeDetails.data.result.photos;
+				// const photosReferenceArray = [];
+				// for (let i = 0; i < photosArray.length; i++) {
+				// 	photosReferenceArray.push(photosArray[i].photo_reference);
+				// }
+				// const photosUrlArray: string[] = [];
+				// for (let i = 0; i < (photosReferenceArray.length < 6 ? photosReferenceArray.length : 6); i++) {
+				// 	await axios
+				// 		.get(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photosReferenceArray[i]}&key=${process.env.GOOGLE_MAPS_API}`)
+				// 		.then(function (response) {
+				// 			photosUrlArray.push(response.request.res.responseUrl);
+				// 		})
+				// 		.catch(function (error) {
+				// 			console.log("Error fetching photo", error);
+				// 		});
+				// }
+			} catch (error) {
+				console.log("Error fetching city photos", error);
 			}
 		},
 	});

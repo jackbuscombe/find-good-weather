@@ -13,10 +13,10 @@ type Props = {
 	longitude: number;
 	latitude: number;
 	isUserHere?: boolean;
+	cityId: string;
 };
 
-function CityResultVertical({ cityName, latitude, longitude, countryName, isUserHere = false }: Props) {
-	// const { data, isLoading } = trpc.useQuery(["places.getPlaceRapid", { placeName: "Berlin" }]);
+function CityResultVertical({ cityId, latitude, longitude, cityName, countryName, isUserHere = false }: Props) {
 	const [distanceFromUser, setDistanceFromUser] = useState("");
 	const [flightTime, setFlightTime] = useState("");
 	const [transportTime, setTransportTime] = useState("");
@@ -25,8 +25,6 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 	const [imageUrl, setImageUrl] = useState("");
 	const [mainImageUrl, setMainImageUrl] = useState("");
 	const [timezone, setTimezone] = useState("");
-	// const [latitude, setLatitude] = useState("");
-	// const [longitude, setLongitude] = useState("");
 	const [locationId, setLocationId] = useState("");
 	const [accommodationCount, setAccommodationCount] = useState("");
 	const [airportCount, setAirportCount] = useState("");
@@ -35,6 +33,8 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 	const [restaurantCount, setRestaurantCount] = useState("");
 	const [forecast, setForecast] = useState<WeatherObject[]>();
 	const userCity = useStore((state) => state.userCity);
+	const userLat = useStore((state) => state.userLat);
+	const userLong = useStore((state) => state.userLong);
 	const selectedCityName = useStore((state) => state.selectedCityName);
 	const setSelectedCityName = useStore((state) => state.setSelectedCityName);
 	const selectedCountryName = useStore((state) => state.selectedCountryName);
@@ -60,16 +60,52 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 		cacheTime: Infinity,
 	});
 
+	const { data: travelTime } = trpc.useQuery(["places.getTravelTimeFromLatLong", { userLat, userLong, destinationLat: latitude, destinationLong: longitude }], {
+		enabled: !!latitude && !!longitude,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	useEffect(() => {
+		if (!travelTime) return;
+		console.log("The newest travel tie is", travelTime);
+	});
+
+	// const { data: locationForecast, isLoading } = trpc.useQuery(["forecast.getForecast", { latitude, longitude }], {
+	// 	enabled: !!latitude && !!longitude,
+	// 	staleTime: Infinity,
+	// 	cacheTime: Infinity,
+	// });
+
+	const { data: locationDetails } = trpc.useQuery(["places.getPlaceDetailsFromCityName", { selectedCityName: cityName }], {
+		enabled: !!cityName,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	// Currently Functional
+	const { data: cityDetails } = trpc.useQuery(["places.getPlaceDetailsFromCityId", { cityId }], {
+		enabled: !!userCity,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	// Currently Functional - Yahoo Forecast
+	const { data: cityForecast, isLoading: isLoadingCityForecast } = trpc.useQuery(["forecast.getYahooForecastByLatLong", { latitude, longitude }], {
+		enabled: !!latitude && !!longitude,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	useEffect(() => {
+		if (!cityForecast) return;
+		console.log(cityForecast);
+	});
+
 	useEffect(() => {
 		if (!cityBasicDetails) return;
 		setMainImageUrl(cityBasicDetails.mainPhotoUrl);
 	}, [cityBasicDetails]);
-
-	const { data: travelTime, isLoading: isLoadingTravelTime } = trpc.useQuery(["places.getTravelTimeFromCityName", { originCityName: userCity, destinationCityName: cityName }], {
-		enabled: cityName != "" && userCity != "",
-		staleTime: Infinity,
-		cacheTime: Infinity,
-	});
 
 	useEffect(() => {
 		if (!travelTime) return;
@@ -86,73 +122,55 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 		}
 	}, [travelTime]);
 
-	const { isLoading, data: locationForecast } = trpc.useQuery(["forecast.getForecast", { latitude, longitude }], {
-		enabled: !!latitude && !!longitude,
-		staleTime: Infinity,
-		cacheTime: Infinity,
-	});
+	// useEffect(() => {
+	// 	if (!locationForecast) return;
+	// 	console.log("This is the location forecast", locationForecast);
+	// 	const forecastArray = [];
+	// 	for (let i = 0; i < locationForecast.list.length; i++) {
+	// 		// 	if (locationForecast.list[i].dt_txt.includes("00:00:00") && i < 30) {
+	// 		// 		let dailyCountingTemp = 0;
+	// 		// 		let dailyMinTemp = 0;
+	// 		// 		let dailyMaxTemp = 999999;
+	// 		// 		for (let j = 0; j < 9; j++) {
+	// 		// 			dailyCountingTemp = dailyCountingTemp + locationForecast.list[i + j].main.temp;
+	// 		// 			if (locationForecast.list[i + j].main.temp_min < dailyMinTemp) {
+	// 		// 				dailyMinTemp = locationForecast.list[i + j].main.temp_min;
+	// 		// 			}
+	// 		// 			if (locationForecast.list[i + j].main.temp_max < dailyMaxTemp) {
+	// 		// 				dailyMaxTemp = locationForecast.list[i + j].main.temp_max;
+	// 		// 			}
+	// 		// 		}
+	// 		// 		dailyCountingTemp = dailyCountingTemp / 8;
 
-	useEffect(() => {
-		if (!longitude || !latitude) return;
-		console.log("The longitude is", longitude);
-		console.log("The latitude is", latitude);
-	}, [longitude, latitude]);
-
-	useEffect(() => {
-		if (!locationForecast) return;
-		console.log("This is the location forecast", locationForecast);
-		const forecastArray = [];
-		for (let i = 0; i < locationForecast.list.length; i++) {
-			// 	if (locationForecast.list[i].dt_txt.includes("00:00:00") && i < 30) {
-			// 		let dailyCountingTemp = 0;
-			// 		let dailyMinTemp = 0;
-			// 		let dailyMaxTemp = 999999;
-			// 		for (let j = 0; j < 9; j++) {
-			// 			dailyCountingTemp = dailyCountingTemp + locationForecast.list[i + j].main.temp;
-			// 			if (locationForecast.list[i + j].main.temp_min < dailyMinTemp) {
-			// 				dailyMinTemp = locationForecast.list[i + j].main.temp_min;
-			// 			}
-			// 			if (locationForecast.list[i + j].main.temp_max < dailyMaxTemp) {
-			// 				dailyMaxTemp = locationForecast.list[i + j].main.temp_max;
-			// 			}
-			// 		}
-			// 		dailyCountingTemp = dailyCountingTemp / 8;
-
-			// 		forecastArray.push({
-			// 			temp: dailyCountingTemp,
-			// 			tempMin: dailyMinTemp,
-			// 			tempMax: dailyMaxTemp,
-			// 			feelsLike: locationForecast.list[i + 5].main.feels_like,
-			// 			humidity: locationForecast.list[i + 5].main.humidity,
-			// 			description: locationForecast.list[i + 5].weather[0].main,
-			// 			windSpeed: locationForecast.list[i + 5].wind.speed,
-			// 			icon: `http://openweathermap.org/img/w/${locationForecast.list[i + 5].weather[0].icon}.png`,
-			// 			timestamp: locationForecast.list[i + 5].dt,
-			// 		});
-			// 	}
-			if (locationForecast.list[i].dt_txt.includes("15:00:00")) {
-				forecastArray.push({
-					temp: locationForecast.list[i].main.temp,
-					tempMin: locationForecast.list[i].main.temp_min,
-					tempMax: locationForecast.list[i].main.temp_max,
-					feelsLike: locationForecast.list[i].main.feels_like,
-					humidity: locationForecast.list[i].main.humidity,
-					description: locationForecast.list[i].weather[0].main,
-					windSpeed: locationForecast.list[i].wind.speed,
-					icon: `http://openweathermap.org/img/w/${locationForecast.list[i].weather[0].icon}.png`,
-					timestamp: locationForecast.list[i].dt,
-				});
-			}
-		}
-		console.log("The forecast array is: ", forecastArray);
-		setForecast(forecastArray);
-	}, [locationForecast]);
-
-	const { isLoading: isLoadingLocationDetails, data: locationDetails } = trpc.useQuery(["places.getPlaceDetailsFromCityName", { selectedCityName: cityName }], {
-		enabled: !!cityName,
-		staleTime: Infinity,
-		cacheTime: Infinity,
-	});
+	// 		// 		forecastArray.push({
+	// 		// 			temp: dailyCountingTemp,
+	// 		// 			tempMin: dailyMinTemp,
+	// 		// 			tempMax: dailyMaxTemp,
+	// 		// 			feelsLike: locationForecast.list[i + 5].main.feels_like,
+	// 		// 			humidity: locationForecast.list[i + 5].main.humidity,
+	// 		// 			description: locationForecast.list[i + 5].weather[0].main,
+	// 		// 			windSpeed: locationForecast.list[i + 5].wind.speed,
+	// 		// 			icon: `http://openweathermap.org/img/w/${locationForecast.list[i + 5].weather[0].icon}.png`,
+	// 		// 			timestamp: locationForecast.list[i + 5].dt,
+	// 		// 		});
+	// 		// 	}
+	// 		if (locationForecast.list[i].dt_txt.includes("15:00:00")) {
+	// 			forecastArray.push({
+	// 				temp: locationForecast.list[i].main.temp,
+	// 				tempMin: locationForecast.list[i].main.temp_min,
+	// 				tempMax: locationForecast.list[i].main.temp_max,
+	// 				feelsLike: locationForecast.list[i].main.feels_like,
+	// 				humidity: locationForecast.list[i].main.humidity,
+	// 				description: locationForecast.list[i].weather[0].main,
+	// 				windSpeed: locationForecast.list[i].wind.speed,
+	// 				icon: `http://openweathermap.org/img/w/${locationForecast.list[i].weather[0].icon}.png`,
+	// 				timestamp: locationForecast.list[i].dt,
+	// 			});
+	// 		}
+	// 	}
+	// 	console.log("The forecast array is: ", forecastArray);
+	// 	setForecast(forecastArray);
+	// }, [locationForecast]);
 
 	useEffect(() => {
 		if (!locationDetails) return;
@@ -204,11 +222,17 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 	// }, [cityName]);
 
 	return (
-		<div key={cityName} className={`grid grid-rows-2 p-4 rounded border space-y-2 shadow transition transform ease-in-out ${isUserHere && "bg-blue-50 hover:bg-blue-200"} ${!isUserHere && "hover:bg-gray-50"}`}>
-			{isLoadingCityBasicDetails ? <Ring /> : <img src={mainImageUrl != "" ? mainImageUrl : "/no-image-placeholder.jpg"} alt={cityName} className="row-span-1 w-full h-28 object-cover rounded self-center shadow" />}
+		<div key={cityName} className={`grid grid-rows-7 p-4 rounded border space-y-2 shadow transition transform ease-in-out ${isUserHere && "bg-blue-50 hover:bg-blue-200"} ${!isUserHere && "hover:bg-gray-50"}`}>
+			{isLoadingCityBasicDetails ? (
+				<div className="w-full flex justify-center items-center p-6">
+					<Ring />
+				</div>
+			) : (
+				<img src={mainImageUrl != "" ? mainImageUrl : "/no-image-placeholder.jpg"} alt={cityName} className="row-span-1 w-full h-28 object-cover rounded self-center shadow" />
+			)}
 			<div className="row-span-1">
 				<h2 className="text-xl font-black">{cityName}</h2>
-				<h3 className="text-gray-500">{fetchedCountryName}</h3>
+				<h3 className="text-gray-500">{countryName}</h3>
 				{isUserHere ? (
 					<div className="flex items-center space-x-4 font-bold text-blue-500 my-4">
 						<RiUserLocationLine size={20} />
@@ -216,25 +240,43 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 					</div>
 				) : (
 					<div className="flex flex-col justify-center my-4">
-						{/* <div className="flex items-center space-x-2">
-						<RiPlaneLine />
-						<p className="text-gray-500 text-lg">{flightTime}</p>
-					</div>
-					<div className="flex items-center space-x-2">
-						<RiTrainFill />
-						<p className="text-gray-500 text-lg">{transportTime}</p>
-					</div> */}
-						<div className="flex items-center space-x-2">
-							<RiCarFill />
-							<p className="text-gray-500">{driveTime}</p>
-						</div>
+						{flightTime && (
+							<div className="flex items-center space-x-2">
+								<RiPlaneLine />
+								<p className="text-gray-500">{flightTime}</p>
+							</div>
+						)}
+						{transportTime && (
+							<div className="flex items-center space-x-2">
+								<RiTrainFill />
+								<p className="text-gray-500">{transportTime}</p>
+							</div>
+						)}
+						{driveTime && (
+							<div className="flex items-center space-x-2">
+								<RiCarFill />
+								<p className="text-gray-500">{driveTime}</p>
+							</div>
+						)}
 						<div className="flex items-center space-x-2">
 							<p className="text-gray-500">({distanceFromUser})</p>
 						</div>
 					</div>
 				)}
 			</div>
-			<button
+
+			{isLoadingCityForecast ? (
+				<div className="w-full flex justify-center items-center p-6">
+					<Ring />
+				</div>
+			) : (
+				<div className="row-span-1">{cityForecast && cityForecast.map(({ day, date, low, high, text }, i) => <WeatherCell key={i} day={day} date={date} low={low} high={high} text={text} />)}</div>
+			)}
+
+			{/* Old Version with openweathermap */}
+			{/* {isLoading ? <Ring /> : <div className="row-span-1">{forecast && forecast.map(({ temp, tempMin, tempMax, feelsLike, humidity, windSpeed, description, icon, timestamp }, i) => <WeatherCell key={i} temp={temp} tempMin={tempMin} tempMax={tempMax} feelsLike={feelsLike} humidity={humidity} windSpeed={windSpeed} description={description} icon={icon} timestamp={timestamp} />)}</div>} */}
+
+			{/* <button
 				onClick={() => {
 					setSelectedCityName(cityName);
 					setSelectedCountryName(fetchedCountryName);
@@ -247,9 +289,7 @@ function CityResultVertical({ cityName, latitude, longitude, countryName, isUser
 				className={`row-span-1 text-blue-500 font-bold shadow rounded h-12 ${isUserHere ? "bg-gray-100 hover:bg-gray-200" : "bg-blue-100 hover:bg-blue-200"}`}
 			>
 				BOOK
-			</button>
-
-			{isLoading ? <Ring /> : <div className="row-span-1">{forecast && forecast.map(({ temp, tempMin, tempMax, feelsLike, humidity, windSpeed, description, icon, timestamp }, i) => <WeatherCell key={i} temp={temp} tempMin={tempMin} tempMax={tempMax} feelsLike={feelsLike} humidity={humidity} windSpeed={windSpeed} description={description} icon={icon} timestamp={timestamp} />)}</div>}
+			</button> */}
 		</div>
 	);
 }
