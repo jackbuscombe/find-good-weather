@@ -53,13 +53,13 @@ function Footer() {
 
 	return (
 		<footer className="bg-zinc-900 p-16 shadow text-white space-y-12">
-			<div className="grid grid-cols-3 gap-y-20">
-				<div className="flex items-center self-start space-x-4 text-xl font-semibold cursor-pointer">
+			<div className="flex flex-col lg:grid lg:grid-cols-3 lg:gap-y-20">
+				<div className="flex mb-6 lg:mb-0 justify-center lg:justify-start items-center lg:items-start space-x-4 text-xl font-semibold cursor-pointer">
 					<TbSun className="text-yellow-400 text-4xl" />
 					<p className="text-white font-mono">Find good weather</p>
 				</div>
-				<div className="grid grid-cols-3 space-x-6">
-					<div>
+				<div className="grid grid-cols-2 lg:grid-cols-3 lg:space-x-6 mb-8 lg:mb-0 text-center lg:text-start">
+					<div className="col-span-3 lg:col-span-1 mb-2 lg:mb-0">
 						<p className="text-gray-500">Top 10 countries of the week</p>
 					</div>
 					<div>
@@ -105,8 +105,8 @@ function Footer() {
 						</ul>
 					</div>
 				</div>
-				<div className="grid grid-cols-3 space-x-6">
-					<div>
+				<div className="grid grid-cols-2 lg:grid-cols-3 lg:space-x-6 mb-8 lg:mb-0 text-center lg:text-start">
+					<div className="col-span-3 lg:col-span-1 mb-2 lg:mb-0">
 						<p className="text-gray-500">Top 10 cities of the week</p>
 					</div>
 					<div>
@@ -152,14 +152,14 @@ function Footer() {
 						</ul>
 					</div>
 				</div>
-				<p className="col-span-2 text-gray-500">The burgers are better at Hungry Jacks</p>
-				<div className="flex space-x-16">
-					<div className="flex items-center space-x-6">
+				<p className="col-span-2 text-gray-500 text-center lg:text-left my-4">The burgers are better at Hungry Jacks</p>
+				<div className="flex items-center justify-center lg:justify-start flex-col lg:flex-row lg:space-x-16">
+					<div className="flex justify-center lg:justify-start items-center space-x-6 mb-8 lg:mb-0">
 						<p>Share social</p>
 						<FaFacebook className="text-2xl cursor-pointer hover:text-gray-400" />
 						<FaLinkedin className="text-2xl cursor-pointer hover:text-gray-400" />
 					</div>
-					<div className="flex items-center space-x-4 cursor-pointer">
+					<div className="flex justify-center lg:justify-start items-center space-x-4 cursor-pointer">
 						<p className="cursor-pointer">°F</p>
 						<Switch className="cursor-pointer" checked={celsius} onChange={(event) => setCelsius(event.currentTarget.checked)} color="dark" size="lg" thumbIcon={celsius ? <p className="text-green-500 font-bold cursor-pointer">°C</p> : <p className="text-green-500 font-bold cursor-pointer">°F</p>} />
 						<p className="cursor-pointer">°C</p>

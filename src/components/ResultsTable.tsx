@@ -30,7 +30,7 @@ function ResultsTable({ tableData }: Props) {
 	const userCountry = useStore((state) => state.userCountry);
 
 	return (
-		<div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
+		<div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2">
 			<CityResultVertical cityId="Q60" cityName={userCity} countryName={userCountry} latitude={userLat} longitude={userLong} isUserHere={true} />
 
 			{tableData && tableData.map(({ cityId, cityName, countryName, lat, long, driveTime, flightTime, imageUrl, transportTime, isUserHere }) => <CityResultVertical key={cityName} cityId={cityId} cityName={cityName} latitude={lat} longitude={long} countryName={countryName} isUserHere={isUserHere} />)}

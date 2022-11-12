@@ -137,13 +137,13 @@ function SearchForm({ className, refetch }: Props) {
 	}, [userCity]);
 
 	return (
-		<div className="z-30">
+		<div className="z-30 px-4">
 			<div className={`flex space-x-4 items-center md:border-2 p-4 rounded-lg font-mono md:shadow-sm bg-white whitespace-nowrap ${className}`}>
 				{isLoaded && (
 					<SearchFormField title="Where" icon={<MdOutlineLocationOn className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />}>
 						<Autocomplete onPlaceChanged={onPlaceChanged} onLoad={onLoad} fields={["place_id", "geometry", "address_components", "name"]}>
 							<div className="flex space-x-4">
-								<input ref={destinationRef} className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer truncate" type="text" placeholder={searchInput || userCity} />
+								<input ref={destinationRef} className="w-4/5 border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer truncate" type="text" placeholder={searchInput || userCity} />
 
 								<div onClick={setToUserLocation} className="text-gray-500 bg-gray-200 hover:bg-gray-100 p-2 rounded-full cursor-pointer transition transform ease-in-out">
 									<AiOutlineHome />

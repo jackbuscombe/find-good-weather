@@ -136,7 +136,7 @@ const Home: NextPage = () => {
 
 			<main className="flex flex-col items-center px-1/4 py-12 bg-cover min-h-screen">
 				{/* Form */}
-				{isLoaded && <SearchForm refetch={refetch} className="-mt-24" />}
+				<div>{isLoaded && <SearchForm refetch={refetch} className="-mt-24" />}</div>
 
 				{isLoaded && nearbyCities && viewType === "vertical" ? (
 					<div className="w-3/4 mt-8 bg-white">

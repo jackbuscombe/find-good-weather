@@ -6,6 +6,7 @@ import axios from "axios";
 import { useStore } from "./appStore";
 import { Ring } from "@uiball/loaders";
 import { WeatherObject } from "../types";
+import { BsChevronDown, BsChevronUp } from "react-icons/bs";
 
 type Props = {
 	cityName: string;
@@ -31,6 +32,7 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 	const [attractionsCount, setAttractionsCount] = useState("");
 	const [neighborhoodCount, setNeighborhoodCount] = useState("");
 	const [restaurantCount, setRestaurantCount] = useState("");
+	const [expanded, setExpanded] = useState(false);
 	const [forecast, setForecast] = useState<WeatherObject[]>();
 	const userCity = useStore((state) => state.userCity);
 	const userLat = useStore((state) => state.userLat);
@@ -269,12 +271,18 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 				)}
 			</div>
 
+			<button onClick={() => setExpanded(!expanded)} className={`flex sm:hidden justify-center items-center text-sm border ${expanded ? "bg-blue-100 text-blue-500" : "bg-blue-500 text-white"} font-bold p-4 rounded-4 rounded`}>
+				{expanded ? <BsChevronUp className="mr-2" /> : <BsChevronDown className="mr-2" />}
+				{expanded ? "Collapse" : "Expand"}
+				{expanded ? <BsChevronUp className="ml-2" /> : <BsChevronDown className="ml-2" />}
+			</button>
+
 			{isLoadingCityForecast ? (
 				<div className="w-full flex justify-center items-center p-6">
 					<Ring />
 				</div>
 			) : (
-				<div className="row-span-1">{cityForecast && cityForecast.map(({ day, date, low, high, text }, i) => <WeatherCell key={i} day={day} date={date} low={low} high={high} text={text} />)}</div>
+				<div className={`${expanded ? "row-span-1" : "hidden"} sm:row-span-1 sm:flex sm:flex-col`}>{cityForecast && cityForecast.map(({ day, date, low, high, text }, i) => <WeatherCell key={i} day={day} date={date} low={low} high={high} text={text} />)}</div>
 			)}
 
 			{/* Old Version with openweathermap */}
