@@ -1,6 +1,6 @@
 import { add } from "date-fns";
 import create from "zustand";
-import { WeatherObject } from "../types";
+import { WeatherObject, YahooWeatherObject } from "../types";
 
 type NearbyCity = {
 	cityName: string;
@@ -25,7 +25,7 @@ type State = {
 	selectedCityDriveTime: string;
 	selectedCityFlightTime: string;
 	selectedCityTransportTime: string;
-	selectedCityWeatherData: WeatherObject[];
+	selectedCityWeatherData: YahooWeatherObject[];
 	peopleCount: number;
 	desiredWeather: string;
 	startDate: Date;
@@ -51,7 +51,7 @@ type State = {
 	setSelectedCityDriveTime: (driveTime: string) => void;
 	setSelectedCityFlightTime: (flightTime: string) => void;
 	setSelectedCityTransportTime: (transportTime: string) => void;
-	setSelectedCityWeatherData: (weatherData: WeatherObject[]) => void;
+	setSelectedCityWeatherData: (weatherData: YahooWeatherObject[]) => void;
 	setPeopleCount: (people: number) => void;
 	setDesiredWeather: (weather: string) => void;
 	setStartDate: (date: Date) => void;
@@ -106,7 +106,7 @@ export const useStore = create<State>((set) => ({
 	setSelectedCityDriveTime: (driveTime: string) => set({ selectedCityDriveTime: driveTime }),
 	setSelectedCityFlightTime: (flightTime: string) => set({ selectedCityFlightTime: flightTime }),
 	setSelectedCityTransportTime: (transportTime: string) => set({ selectedCityTransportTime: transportTime }),
-	setSelectedCityWeatherData: (weatherData: WeatherObject[]) => set({ selectedCityWeatherData: weatherData }),
+	setSelectedCityWeatherData: (weatherData: YahooWeatherObject[]) => set({ selectedCityWeatherData: weatherData }),
 	setPeopleCount: (people: number) => set({ peopleCount: people }),
 	setDesiredWeather: (weather: string) => set({ desiredWeather: weather }),
 	setStartDate: (date: Date) => set({ startDate: date }),

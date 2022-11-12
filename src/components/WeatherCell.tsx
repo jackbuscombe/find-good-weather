@@ -20,7 +20,7 @@ function WeatherCell({ day, date, low, high, text /* temp, tempMin, tempMax, fee
 						<div className="w-full flex justify-evenly items-center space-x-2 text-center">
 							<img src={getWeatherIcon(text)} alt={text} className="h-8 w-8" />
 							<div className="flex flex-col items-center">
-								<p className="text-lg text-black font-bold">{`${celsius ? `${((low + high) / 2).toFixed(0)}°C` : `${celsiusToFahrenheit((low + high) / 2).toFixed(0)}°F`}`}</p>
+								<p className="text-lg text-black font-bold">{`${celsius ? `${high.toFixed(0)}°C` : `${celsiusToFahrenheit(high).toFixed(0)}°F`}`}</p>
 								<p className="text-gray-500 text-sm">{text}</p>
 							</div>
 						</div>
@@ -34,7 +34,7 @@ function WeatherCell({ day, date, low, high, text /* temp, tempMin, tempMax, fee
 							<img src={getWeatherIcon(text)} alt={text} className="h-12 w-12" />
 
 							<div>
-								<p className="text-lg text-black font-bold">{`${celsius ? `${((low + high) / 2).toFixed(0)}°C` : `${celsiusToFahrenheit(((low + high) / 2).toFixed(0))}°F`}`}</p>
+								<p className="text-lg text-black font-bold">{`${celsius ? `${high.toFixed(0)}°C` : `${celsiusToFahrenheit(high).toFixed(0)}°F`}`}</p>
 								<p className="text-gray-500">{text}</p>
 							</div>
 						</div>

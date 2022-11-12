@@ -198,8 +198,8 @@ function LocationModal() {
 							<div className="flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
 								<FiChevronLeft />
 							</div>
-							{selectedCityWeatherData.map(({ temp, tempMin, tempMax, feelsLike, humidity, windSpeed, description, icon, timestamp }, i) => (
-								<WeatherCell key={i} temp={temp} tempMin={tempMin} tempMax={tempMax} feelsLike={feelsLike} humidity={humidity} windSpeed={windSpeed} description={description} icon={icon} timestamp={timestamp} />
+							{selectedCityWeatherData.map(({ day, date, low, high, text }, i) => (
+								<WeatherCell key={i} day={day} date={date} low={low} high={high} text={text} />
 							))}
 							<div className="flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
 								<FiChevronRight />

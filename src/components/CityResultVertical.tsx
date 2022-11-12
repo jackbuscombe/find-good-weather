@@ -60,8 +60,14 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 		cacheTime: Infinity,
 	});
 
-	const { data: travelTime } = trpc.useQuery(["places.getTravelTimeFromLatLong", { userLat, userLong, destinationLat: latitude, destinationLong: longitude }], {
-		enabled: !!latitude && !!longitude,
+	// const { data: travelTime } = trpc.useQuery(["places.getTravelTimeFromLatLong", { userLat, userLong, destinationLat: latitude, destinationLong: longitude }], {
+	// 	enabled: !!latitude && !!longitude,
+	// 	staleTime: Infinity,
+	// 	cacheTime: Infinity,
+	// });
+
+	const { data: travelTime } = trpc.useQuery(["places.getTravelTimeFromCityName", { destinationCityName: `${cityName} ${countryName}`, originCityName: `${userCity}` }], {
+		enabled: !!cityName && !!countryName && !!userCity,
 		staleTime: Infinity,
 		cacheTime: Infinity,
 	});
@@ -115,10 +121,6 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 			setTransportTime(travelTime?.rows[0]?.elements?.[0]?.duration?.text);
 			setDriveTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
 			setDistanceFromUser(travelTime?.rows?.[0]?.elements?.[0]?.distance?.text);
-		} else {
-			setFlightTime("Cannot fly");
-			setTransportTime("Cannot catch train/bus");
-			setDriveTime("Cannot drive");
 		}
 	}, [travelTime]);
 
@@ -240,7 +242,7 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 					</div>
 				) : (
 					<div className="flex flex-col justify-center my-4">
-						{flightTime && (
+						{/* {flightTime && (
 							<div className="flex items-center space-x-2">
 								<RiPlaneLine />
 								<p className="text-gray-500">{flightTime}</p>
@@ -251,16 +253,18 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 								<RiTrainFill />
 								<p className="text-gray-500">{transportTime}</p>
 							</div>
-						)}
+						)} */}
 						{driveTime && (
 							<div className="flex items-center space-x-2">
 								<RiCarFill />
 								<p className="text-gray-500">{driveTime}</p>
 							</div>
 						)}
-						<div className="flex items-center space-x-2">
-							<p className="text-gray-500">({distanceFromUser})</p>
-						</div>
+						{distanceFromUser && (
+							<div className="flex items-center space-x-2">
+								<p className="text-gray-500">({distanceFromUser})</p>
+							</div>
+						)}
 					</div>
 				)}
 			</div>

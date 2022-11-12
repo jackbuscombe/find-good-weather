@@ -35,6 +35,11 @@ export default function (weather: string) {
 			return "/weather_icons/storm-icon-transparent.gif";
 		case "lightning":
 			return "/weather_icons/storm-icon-transparent.gif";
+
+		case "windy":
+			return "/weather_icons/windy-icon-transparent.png";
+		case "wind":
+			return "/weather_icons/windy-icon-transparent.png";
 		default:
 	}
 }

@@ -153,7 +153,7 @@ function SearchForm({ className, refetch }: Props) {
 					</SearchFormField>
 				)}
 
-				<SearchFormField title="Desired Weather" icon={<RiSunFoggyLine className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />}>
+				{/* <SearchFormField title="Desired Weather" icon={<RiSunFoggyLine className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />}>
 					<SearchFieldDesiredWeather options={["clear", "rainy", "snow"]} />
 				</SearchFormField>
 
@@ -179,7 +179,7 @@ function SearchForm({ className, refetch }: Props) {
 							)}
 						</>
 					</SearchFormField>
-				</div>
+				</div> */}
 
 				{/* <button
 					onClick={() => {
