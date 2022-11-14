@@ -45,6 +45,7 @@ type State = {
 	selectedCityLong: number;
 	isLocationModalOpen: boolean;
 	nearbyCitiesArray: NearbyCity[];
+	isViewingHome: boolean;
 	setSelectedCityName: (cityName: string) => void;
 	setSelectedCountryName: (countryName: string) => void;
 	setSelectedLocationId: (locationId: string) => void;
@@ -71,6 +72,7 @@ type State = {
 	setSelectedCityLong: (longitude: number) => void;
 	setIsLocationModalOpen: (isOpen: boolean) => void;
 	setNearbyCitiesArray: (array: NearbyCity[]) => void;
+	setIsViewingHome: (isViewingHome: boolean) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -100,6 +102,7 @@ export const useStore = create<State>((set) => ({
 	selectedCityLong: 0,
 	isLocationModalOpen: false,
 	nearbyCitiesArray: [],
+	isViewingHome: true,
 	setSelectedCityName: (cityName) => set({ selectedCityName: cityName }),
 	setSelectedCountryName: (countryName) => set({ selectedCountryName: countryName }),
 	setSelectedLocationId: (locationId) => set({ selectedLocationId: locationId }),
@@ -126,4 +129,5 @@ export const useStore = create<State>((set) => ({
 	setSelectedCityLong: (longitude) => set({ selectedCityLong: longitude }),
 	setIsLocationModalOpen: (isOpen) => set({ isLocationModalOpen: isOpen }),
 	setNearbyCitiesArray: (array) => set({ nearbyCitiesArray: array }),
+	setIsViewingHome: (isViewingHome) => set({ isViewingHome: isViewingHome }),
 }));

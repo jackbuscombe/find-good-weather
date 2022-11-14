@@ -55,6 +55,7 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 	const setSelectedCityLat = useStore((state) => state.setSelectedCityLat);
 	const selectedCityLong = useStore((state) => state.selectedCityLong);
 	const setSelectedCityLong = useStore((state) => state.setSelectedCityLong);
+	const [hiddenResult, setHiddenResult] = useState(false);
 
 	const { data: cityBasicDetails, isLoading: isLoadingCityBasicDetails } = trpc.useQuery(["places.getPlaceBasicDetailsFromCityName", { cityName }], {
 		enabled: !!userCity,
@@ -225,8 +226,32 @@ function CityResultVertical({ cityId, latitude, longitude, cityName, countryName
 	// 		});
 	// }, [cityName]);
 
+	useEffect(() => {
+		if (!cityForecast) return;
+
+		const goodWeather = "clear" || "sun" || "sunny" || "mostly sunny" || "partly cloudy";
+		const badWeather = "rain" || "rainy" || "scattered showers" || "showers" || "rain and snow" || "storms" || "storm" || "thunder" || "thunderstorms" || "lightning" || "hail" || "hail storm" || "hailing" || "snow storm";
+
+		let pointTally = 0;
+		let count = 0;
+
+		// Do filter process
+		for (let i = 0; i < cityForecast.length; i++) {
+			if (cityForecast[i]?.text.toLowerCase() == goodWeather) {
+				pointTally++;
+			} else if (cityForecast[i]?.text.toLowerCase() == badWeather) {
+				pointTally--;
+			}
+			count++;
+		}
+		console.log("The point tally is ", pointTally);
+		if (pointTally / count < -200) {
+			setHiddenResult(true);
+		}
+	}, [cityForecast]);
+
 	return (
-		<div key={cityName} className={`grid grid-rows-7 p-4 rounded border space-y-2 shadow transition transform ease-in-out ${isUserHere && "bg-blue-50 hover:bg-blue-200"} ${!isUserHere && "hover:bg-gray-50"}`}>
+		<div key={cityName} className={`${hiddenResult && "hidden"} grid grid-rows-7 p-4 rounded border space-y-2 shadow transition transform ease-in-out ${isUserHere && "bg-blue-50 hover:bg-blue-200"} ${!isUserHere && "hover:bg-gray-50"}`}>
 			{isLoadingCityBasicDetails ? (
 				<div className="w-full flex justify-center items-center p-6">
 					<Ring />

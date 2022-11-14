@@ -51,6 +51,7 @@ function SearchForm({ className, refetch }: Props) {
 	const setEndDate = useStore((state) => state.setEndDate);
 	const isLocationModalOpen = useStore((state) => state.isLocationModalOpen);
 	const setIsLocationModalOpen = useStore((state) => state.setIsLocationModalOpen);
+	const setIsViewingHome = useStore((state) => state.setIsViewingHome);
 
 	const selectedCityName = useStore((state) => state.selectedCityName);
 	const setSelectedCityName = useStore((state) => state.setSelectedCityName);
@@ -125,11 +126,13 @@ function SearchForm({ className, refetch }: Props) {
 			setSelectedCityLong(lng);
 			setSelectedLocationId(placeId);
 		}
+		setIsViewingHome(false);
 	};
 
 	const setToUserLocation = () => {
 		setSelectedCityLat(userLat);
 		setSelectedCityLong(userLong);
+		setIsViewingHome(true);
 	};
 
 	useEffect(() => {

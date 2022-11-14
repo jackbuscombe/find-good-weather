@@ -12,6 +12,7 @@ import ResultsTable from "../components/ResultsTable";
 import Map from "../components/Map";
 import coordinatesToISO from "../utils/coordinatesToISO";
 import { Ring } from "@uiball/loaders";
+import { BsFillArrowLeftSquareFill, BsFillArrowRightSquareFill } from "react-icons/bs";
 
 const Home: NextPage = () => {
 	const userLat = useStore((state) => state.userLat);
@@ -39,6 +40,7 @@ const Home: NextPage = () => {
 	const [endDate, setEndDate] = useState(new Date());
 	const datepickerWrapperRef = useRef(null);
 	// useOutsideAlerter(datepickerWrapperRef);
+	const [pageNumber, setPageNumber] = useState(0);
 
 	const { data: userLocationObject, isLoading: isLoadingUserLocation } = trpc.useQuery(["places.getCityFromLatLong", { lat: userLat, long: userLong }], {
 		enabled: !!userLat && !!userLong,
@@ -134,13 +136,31 @@ const Home: NextPage = () => {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 
-			<main className="flex flex-col items-center px-1/4 py-12 bg-cover min-h-screen">
+			<main className="flex flex-col items-center py-12 bg-cover min-h-screen">
 				{/* Form */}
 				<div>{isLoaded && <SearchForm refetch={refetch} className="-mt-24" />}</div>
 
+				<div className="w-5/6 xl:w-3/4 space-x-2 flex justify-center items-center mt-8">
+					<div
+						onClick={() => {
+							if (pageNumber > 0) {
+								setPageNumber(pageNumber - 1);
+							}
+						}}
+						className={`w-full flex justify-center items-center space-x-4 py-3 mb-2 bg-blue-500 ${pageNumber > 0 && "hover:bg-blue-700"} text-white font-bold rounded ${pageNumber > 0 ? "cursor-pointer" : "cursor-not-allowed"} transition transform ease-in-out`}
+					>
+						<BsFillArrowLeftSquareFill />
+						<h3>Back</h3>
+					</div>
+					<div onClick={() => setPageNumber(pageNumber + 1)} className={`w-full flex justify-center items-center space-x-4 py-3 mb-2 bg-blue-500 hover:bg-blue-700 text-white font-bold rounded cursor-pointer transition transform ease-in-out`}>
+						<h3>More</h3>
+						<BsFillArrowRightSquareFill />
+					</div>
+				</div>
+
 				{isLoaded && nearbyCities && viewType === "vertical" ? (
-					<div className="w-3/4 mt-8 bg-white">
-						<ResultsTable tableData={nearbyCities} />
+					<div className="w-5/6 xl:w-3/4 bg-white">
+						<ResultsTable tableData={nearbyCities} pageNumber={pageNumber} />
 					</div>
 				) : isLoadingNearbyCities ? (
 					<div className="w-full flex justify-center items-center p-6">

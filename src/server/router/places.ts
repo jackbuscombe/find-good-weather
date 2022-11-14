@@ -199,7 +199,7 @@ export const placesRouter = createRouter()
 						radius: "100",
 						minPopulation: "90000",
 						distanceUnit: "MI",
-						sort: "population",
+						// sort: "population",
 						types: "CITY",
 					},
 					headers: {
