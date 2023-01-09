@@ -278,8 +278,6 @@ function CityResultVertical({
     }
   }, [cityForecast]);
 
-  const cityForecastMemoized = useMemo(() => {}, [cityForecast]);
-
   useEffect(() => {
     console.log("Rendering component");
   }, []);
