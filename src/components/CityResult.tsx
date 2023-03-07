@@ -55,7 +55,7 @@ function CityResultVertical({
   const [distanceFromUser, setDistanceFromUser] = useState("");
   const [flightTime, setFlightTime] = useState("");
   const [transportTime, setTransportTime] = useState("");
-  const [driveTime, setDriveTime] = useState("");
+  // const [driveTime, setDriveTime] = useState("");
   const [fetchedCountryName, setFetchedCountryName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   // const [mainImageUrl, setMainImageUrl] = useState("");
@@ -84,6 +84,9 @@ function CityResultVertical({
   const setSelectedCityWeatherData = useStore(
     (state) => state.setSelectedCityWeatherData
   );
+  const setSelectedCityFlightLink = useStore(
+    (state) => state.setSelectedCityFlightLink
+  );
   const isLocationModalOpen = useStore((state) => state.isLocationModalOpen);
   const setIsLocationModalOpen = useStore(
     (state) => state.setIsLocationModalOpen
@@ -91,8 +94,8 @@ function CityResultVertical({
   const selectedCityFlightTime = useStore(
     (state) => state.selectedCityFlightTime
   );
-  const selectedCityTransportTime = useStore(
-    (state) => state.selectedCityTransportTime
+  const selectedCityTransitTime = useStore(
+    (state) => state.selectedCityTransitTime
   );
   const selectedCityDriveTime = useStore(
     (state) => state.selectedCityDriveTime
@@ -100,8 +103,8 @@ function CityResultVertical({
   const setSelectedCityFlightTime = useStore(
     (state) => state.setSelectedCityFlightTime
   );
-  const setSelectedCityTransportTime = useStore(
-    (state) => state.setSelectedCityTransportTime
+  const setSelectedCityTransitTime = useStore(
+    (state) => state.setSelectedCityTransitTime
   );
   const setSelectedCityDriveTime = useStore(
     (state) => state.setSelectedCityDriveTime
@@ -158,25 +161,42 @@ function CityResultVertical({
     }
   );
 
-  useEffect(() => {
-    if (!mainPhotoUrl) return;
-    console.log("SPARQL ", mainPhotoUrl);
-  }, [mainPhotoUrl]);
+  // const { data: travelTime } = trpc.useQuery(
+  //   [
+  //     "places.getTravelTimeFromCityName",
+  //     {
+  //       destinationCityName: `${name} ${countryName}`,
+  //       originCityName: `${userCity}`,
+  //     },
+  //   ],
+  //   {
+  //     enabled: !!name && !!countryName && !!userCity,
+  //     staleTime: Infinity,
+  //     cacheTime: Infinity,
+  //   }
+  // );
 
   const { data: travelTime } = trpc.useQuery(
     [
-      "places.getTravelTimeFromCityName",
+      "places.getTravelTimeFromLatLong",
       {
-        destinationCityName: `${name} ${countryName}`,
-        originCityName: `${userCity}`,
+        userLat,
+        userLong,
+        destinationLat: lat,
+        destinationLong: lon,
       },
     ],
     {
-      enabled: !!name && !!countryName && !!userCity,
+      enabled: !!userLat && !!userLong && !!lat && !!lon,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
   );
+
+  useEffect(() => {
+    if (!travelTime) return;
+    console.log("TravelTime: ", travelTime);
+  }, [travelTime]);
 
   // const { data: locationForecast, isLoading } = trpc.useQuery(["forecast.getForecast", { lat, lon }], {
   // 	enabled: !!lat && !!lon,
@@ -292,16 +312,16 @@ function CityResultVertical({
     console.log("This is the new cityCorecast", cityForecast);
   }, [cityForecast]);
 
-  useEffect(() => {
-    if (!travelTime) return;
-    console.log("Travel time", travelTime);
-    if (travelTime?.rows?.[0]?.elements?.[0]?.status != "ZERO_RESULTS") {
-      setFlightTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
-      setTransportTime(travelTime?.rows[0]?.elements?.[0]?.duration?.text);
-      setDriveTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
-      setDistanceFromUser(travelTime?.rows?.[0]?.elements?.[0]?.distance?.text);
-    }
-  }, [travelTime]);
+  // useEffect(() => {
+  //   if (!travelTime) return;
+  //   console.log("Travel time", travelTime);
+  //   if (travelTime?.rows?.[0]?.elements?.[0]?.status != "ZERO_RESULTS") {
+  //     setFlightTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
+  //     setTransportTime(travelTime?.rows[0]?.elements?.[0]?.duration?.text);
+  //     setDriveTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
+  //     setDistanceFromUser(travelTime?.rows?.[0]?.elements?.[0]?.distance?.text);
+  //   }
+  // }, [travelTime]);
 
   useEffect(() => {
     if (!locationDetails) return;
@@ -388,7 +408,17 @@ function CityResultVertical({
 
   return (
     <div
-      onClick={() => setIsLocationModalOpen(true)}
+      onClick={() => {
+        setIsLocationModalOpen(true);
+        setSelectedCityName(name);
+        setSelectedCountryName(countryName);
+        setSelectedCityLat(lat);
+        setSelectedCityLong(lon);
+        setSelectedCityWeatherData(cityForecast?.forecast ?? []);
+        setSelectedCityDriveTime(travelTime?.travelTimeDriving ?? "N/A");
+        setSelectedCityTransitTime(travelTime?.travelTimeTransit ?? "N/A");
+        setSelectedCityFlightLink(flightLink);
+      }}
       className={`${hiddenResult && "hidden"}`}
       ref={resultRef}
     >
@@ -450,7 +480,7 @@ function CityResultVertical({
                 href={flightLink}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full flex justify-center items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
               >
                 <RiPlaneLine size={26} />
                 <p className="text-gray-500 group-hover:text-blue-500">
@@ -461,19 +491,23 @@ function CityResultVertical({
                 href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=transit`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full flex justify-center items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
               >
                 <RiTrainLine size={26} />
-                <p className="text-gray-500">{transportTime ?? "N/A"}</p>
+                <p className="text-gray-500 group-hover:text-blue-500">
+                  {travelTime?.travelTimeTransit ?? "N/A"}
+                </p>
               </a>
               <a
                 href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=driving`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full flex justify-center items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
               >
                 <RiCarLine size={26} />
-                <p className="text-gray-500">{driveTime ?? "N/A"}</p>
+                <p className="text-gray-500 group-hover:text-blue-500">
+                  {travelTime?.travelTimeDriving ?? "N/A"}
+                </p>
               </a>
             </div>
           )}

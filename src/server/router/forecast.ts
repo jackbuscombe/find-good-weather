@@ -78,6 +78,8 @@ export const forecastRouter = createRouter()
           }&aqi=no&alerts=no`
         );
 
+        // console.log("Weather response: ", response.data);
+
         const cityName: string = response.data.location.name;
         const countryName: string = response.data.location.country;
         const forecast: WeatherApiWeatherObject[] = [];
@@ -93,6 +95,8 @@ export const forecastRouter = createRouter()
             condition: response.data.forecast.forecastday[i].day.condition.code,
           });
         }
+
+        // console.log("Forecast: ", forecast);
         return {
           cityName,
           countryName,
@@ -135,6 +139,8 @@ export const forecastRouter = createRouter()
           `http://api.weatherapi.com/v1/future.json?key=${process.env.WEATHERAPI_API_TOKEN}&q=${input.lat},${input.lon}&dt=${dateArray[0]}`
         );
 
+        // console.log("Response: ", response.data);
+
         const cityName: string = response.data.location.name;
         const countryName: string = response.data.location.country;
         forecastArray.push({
@@ -159,10 +165,6 @@ export const forecastRouter = createRouter()
             `http://api.weatherapi.com/v1/future.json?key=${process.env.WEATHERAPI_API_TOKEN}&q=${input.lat},${input.lon}&dt=${dateArray[j]}`
           );
 
-          console.log(
-            "This is the response from the j loop: ",
-            response.data.forecast.forecastday[0].date
-          );
           forecastArray.push({
             date: response.data.forecast.forecastday[0].date_epoch,
             temp_max_c: response.data.forecast.forecastday[0].day.maxtemp_c,

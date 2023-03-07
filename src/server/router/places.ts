@@ -5,6 +5,7 @@ import { connectToCluster } from "../db/client";
 import { MongoClient } from "mongodb";
 import { countryCodes } from "../../../public/countryCodes";
 import { GeonameResponse, GeonameResult } from "../../types";
+import secondsToDhm from "../../utils/secondsToDhm";
 
 export const placesRouter = createRouter()
   .query("getPlaceRapid", {
@@ -191,13 +192,27 @@ export const placesRouter = createRouter()
     }),
     async resolve({ input }) {
       try {
-        const distanceSearch = await axios.get(
-          `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${input.userLat}%2C${input.userLong}&destinations=${input.destinationLat}${input.destinationLong}&key=${process.env.GOOGLE_MAPS_API}`
+        const driveTimeQuery = await axios.get(
+          `https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${input.destinationLat}%2C${input.destinationLong}&origins=${input.userLat}%2C${input.userLong}&mode=driving&key=${process.env.GOOGLE_MAPS_API}`
         );
-        // console.log("The newest travel time is ", distanceSearch.data);
-        return distanceSearch.data;
+        const travelTimeDriving =
+          secondsToDhm(
+            driveTimeQuery.data.rows[0].elements[0].duration.value
+          ) ?? "N/A";
+        console.log("The newest Drive time is ", travelTimeDriving);
+
+        const transitTimeQuery = await axios.get(
+          `https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${input.destinationLat}%2C${input.destinationLong}&origins=${input.userLat}%2C${input.userLong}&mode=transit&key=${process.env.GOOGLE_MAPS_API}`
+        );
+        const travelTimeTransit =
+          secondsToDhm(
+            transitTimeQuery.data.rows[0].elements[0].duration.value
+          ) ?? "N/A";
+        console.log("The newest Transit time is ", travelTimeTransit);
+
+        return { travelTimeDriving, travelTimeTransit };
       } catch (error) {
-        // console.log("Error fetching travel time", error);
+        throw new Error("Unable to get Travel Time");
       }
     },
   })
@@ -592,7 +607,6 @@ export const placesRouter = createRouter()
         const queryDispatcher = new SPARQLQueryDispatcher(endpointUrl);
         const queryRes = await queryDispatcher.query(sparqlQuery);
 
-        console.log("QUERY RES: ", queryRes.results.bindings);
         const wikidata = queryRes.results.bindings[0];
         const wikidataId = wikidata.itemLabel.value;
         // const placeName = wikidata.placeLabel;
@@ -660,7 +674,8 @@ export const placesRouter = createRouter()
         const filter = {
           location: {
             $near: {
-              $maxDistance: 100000,
+              $minDistance: 100000, // 100 km
+              $maxDistance: 10000000, // 10,000 km
               $geometry: {
                 type: "Point",
                 coordinates: [input.lon, input.lat],
@@ -669,11 +684,29 @@ export const placesRouter = createRouter()
           },
         };
 
-        const geoNames = client?.db("geonames").collection("geonames");
+        const aggregation = [
+          {
+            $geoNear: {
+              near: {
+                type: "Point",
+                coordinates: [input.lon, input.lat],
+              },
+              minDistance: 100 * 1000,
+              maxDistance: 50000 * 1000,
+              key: "location",
+              spherical: true,
+              distanceField: "distance",
+            },
+          },
+        ];
+
+        const geoNames = client
+          ?.db("geonames")
+          .collection("geonames_pop_100000");
         const response = (await geoNames
-          .find(filter)
+          .aggregate(aggregation)
+          .limit(30)
           .toArray()) as GeonameResponse[];
-        console.log("RESPONSE: ", response);
 
         const result: GeonameResult[] = [];
 

@@ -19,6 +19,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   const setUserLat = useStore((state) => state.setUserLat);
   const setUserLong = useStore((state) => state.setUserLong);
   const setCelsius = useStore((state) => state.setCelsius);
+  const setUserCity = useStore((state) => state.setUserCity);
+  const setUserCountry = useStore((state) => state.setUserCountry);
+  const setUserCurrency = useStore((state) => state.setUserCurrency);
 
   useEffect(() => {
     if (userLat && userLong) return;
@@ -28,6 +31,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         const { data: result } = await axios.get(`https://ipapi.co/json/`);
         setUserLat(result.latitude);
         setUserLong(result.longitude);
+        setUserCity(result.city);
+        setUserCountry(result.country_name);
+        setUserCurrency(result.currency);
 
         if (
           result.country_name == "United States" ||

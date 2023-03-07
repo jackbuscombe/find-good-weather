@@ -30,19 +30,22 @@ const Home: NextPage = () => {
   const setUserFullLocationName = useStore(
     (state) => state.setUserFullLocationName
   );
+  const userCity = useStore((state) => state.userCity);
   const setUserCity = useStore((state) => state.setUserCity);
+  const userCountry = useStore((state) => state.userCountry);
   const setUserCountry = useStore((state) => state.setUserCountry);
   const setUserPlaceId = useStore((state) => state.setUserPlaceId);
-  const selectedCityLat = useStore((state) => state.selectedCityLat);
-  const selectedCityLong = useStore((state) => state.selectedCityLong);
-  const setSelectedCityLat = useStore((state) => state.setSelectedCityLat);
-  const setSelectedCityLong = useStore((state) => state.setSelectedCityLong);
+  const searchedCityLat = useStore((state) => state.searchedCityLat);
+  const searchedCityLong = useStore((state) => state.searchedCityLong);
+  const setSearchedCityLat = useStore((state) => state.setSearchedCityLat);
+  const setSearchedCityLong = useStore((state) => state.setSearchedCityLong);
   const currentAirportIata = useStore((state) => state.currentAirportIata);
   const setCurrentAirportIata = useStore(
     (state) => state.setCurrentAirportIata
   );
 
   const isLocationModalOpen = useStore((state) => state.isLocationModalOpen);
+  const setIsViewingHome = useStore((state) => state.setIsViewingHome);
   const viewType = useStore((state) => state.viewType);
   const [isDatepickerOpen, setIsDatepickerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -91,10 +94,10 @@ const Home: NextPage = () => {
   } = trpc.useQuery(
     [
       "places.getNearbyPlacesMongo",
-      { lat: selectedCityLat, lon: selectedCityLong },
+      { lat: searchedCityLat, lon: searchedCityLong },
     ],
     {
-      enabled: !!selectedCityLat && !!selectedCityLong,
+      enabled: !!searchedCityLat && !!searchedCityLong,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
@@ -111,9 +114,9 @@ const Home: NextPage = () => {
   });
 
   const { data: currentAirport } = trpc.useQuery(
-    ["flights.getIataCode", { lat: selectedCityLat, lon: selectedCityLong }],
+    ["flights.getIataCode", { lat: searchedCityLat, lon: searchedCityLong }],
     {
-      enabled: !!selectedCityLat && !!selectedCityLong,
+      enabled: !!searchedCityLat && !!searchedCityLong,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
@@ -122,9 +125,14 @@ const Home: NextPage = () => {
   // Set Selected Lat and Long to User Lat and Long On Load
   useMemo(() => {
     if (!userLat || !userLong) return;
-    setSelectedCityLat(userLat);
-    setSelectedCityLong(userLong);
+    setSearchedCityLat(userLat);
+    setSearchedCityLong(userLong);
   }, [userLat, userLong]);
+
+  // useEffect(() => {
+  //   if (!searchedCityLat || !searchedCityLong) return;
+  //   setIsViewingHome(false);
+  // }, [searchedCityLat, searchedCityLong]);
 
   useEffect(() => {
     if (!currentAirport) return;

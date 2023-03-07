@@ -75,10 +75,10 @@ function SearchForm({ className, refetch }: Props) {
   const setSelectedCityWeatherData = useStore(
     (state) => state.setSelectedCityWeatherData
   );
-  const selectedCityLat = useStore((state) => state.selectedCityLat);
-  const setSelectedCityLat = useStore((state) => state.setSelectedCityLat);
-  const selectedCityLong = useStore((state) => state.selectedCityLong);
-  const setSelectedCityLong = useStore((state) => state.setSelectedCityLong);
+  const searchedCityLat = useStore((state) => state.searchedCityLat);
+  const setSearchedCityLat = useStore((state) => state.setSearchedCityLat);
+  const searchedCityLong = useStore((state) => state.searchedCityLong);
+  const setSearchedCityLong = useStore((state) => state.setSearchedCityLong);
   const selectedLocationId = useStore((state) => state.selectedLocationId);
   const setSelectedLocationId = useStore(
     (state) => state.setSelectedLocationId
@@ -153,16 +153,16 @@ function SearchForm({ className, refetch }: Props) {
     if (lat && lng) {
       setSelectedCityName(cityName);
       setSelectedCountryName(countryName);
-      setSelectedCityLat(lat);
-      setSelectedCityLong(lng);
+      setSearchedCityLat(lat);
+      setSearchedCityLong(lng);
       setSelectedLocationId(placeId);
     }
-    setIsViewingHome(false);
+    // setIsViewingHome(false);
   };
 
   const setToUserLocation = () => {
-    setSelectedCityLat(userLat);
-    setSelectedCityLong(userLong);
+    setSearchedCityLat(userLat);
+    setSearchedCityLong(userLong);
     setIsViewingHome(true);
   };
 

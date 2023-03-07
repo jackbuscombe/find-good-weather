@@ -1,6 +1,6 @@
 import { add } from "date-fns";
 import create from "zustand";
-import { WeatherObject, YahooWeatherObject } from "../types";
+import { WeatherApiWeatherObject, WeatherObject } from "../types";
 
 type NearbyCity = {
   cityName: string;
@@ -24,8 +24,9 @@ type State = {
   selectedLocationId: string;
   selectedCityDriveTime: string;
   selectedCityFlightTime: string;
-  selectedCityTransportTime: string;
-  selectedCityWeatherData: YahooWeatherObject[];
+  selectedCityTransitTime: string;
+  selectedCityWeatherData: WeatherApiWeatherObject[];
+  selectedCityFlightLink: string;
   peopleCount: number;
   desiredWeather: string;
   startDate: Date;
@@ -36,6 +37,7 @@ type State = {
   userFullLocationName: string;
   userCity: string;
   userCountry: string;
+  userCurrency: string;
   userPlaceId: string;
   userWeather: string;
   userTemp: number;
@@ -43,6 +45,8 @@ type State = {
   userLong: number;
   selectedCityLat: number;
   selectedCityLong: number;
+  searchedCityLat: number;
+  searchedCityLong: number;
   isLocationModalOpen: boolean;
   nearbyCitiesArray: NearbyCity[];
   isViewingHome: boolean;
@@ -52,8 +56,9 @@ type State = {
   setSelectedLocationId: (locationId: string) => void;
   setSelectedCityDriveTime: (driveTime: string) => void;
   setSelectedCityFlightTime: (flightTime: string) => void;
-  setSelectedCityTransportTime: (transportTime: string) => void;
-  setSelectedCityWeatherData: (weatherData: YahooWeatherObject[]) => void;
+  setSelectedCityTransitTime: (transportTime: string) => void;
+  setSelectedCityWeatherData: (weatherData: WeatherApiWeatherObject[]) => void;
+  setSelectedCityFlightLink: (link: string) => void;
   setPeopleCount: (people: number) => void;
   setDesiredWeather: (weather: string) => void;
   setStartDate: (date: Date) => void;
@@ -64,6 +69,7 @@ type State = {
   setUserFullLocationName: (locationName: string) => void;
   setUserCity: (city: string) => void;
   setUserCountry: (country: string) => void;
+  setUserCurrency: (currency: string) => void;
   setUserPlaceId: (city: string) => void;
   setUserWeather: (weather: string) => void;
   setUserTemp: (temp: number) => void;
@@ -71,6 +77,8 @@ type State = {
   setUserLong: (longitude: number) => void;
   setSelectedCityLat: (latitude: number) => void;
   setSelectedCityLong: (longitude: number) => void;
+  setSearchedCityLat: (latitude: number) => void;
+  setSearchedCityLong: (longitude: number) => void;
   setIsLocationModalOpen: (isOpen: boolean) => void;
   setNearbyCitiesArray: (array: NearbyCity[]) => void;
   setIsViewingHome: (isViewingHome: boolean) => void;
@@ -83,8 +91,9 @@ export const useStore = create<State>((set) => ({
   selectedLocationId: "",
   selectedCityDriveTime: "",
   selectedCityFlightTime: "",
-  selectedCityTransportTime: "",
+  selectedCityTransitTime: "",
   selectedCityWeatherData: [],
+  selectedCityFlightLink: "",
   peopleCount: 2,
   desiredWeather: "clear",
   startDate: add(new Date(), { days: 0 }),
@@ -95,6 +104,7 @@ export const useStore = create<State>((set) => ({
   userFullLocationName: "",
   userCity: "",
   userCountry: "",
+  userCurrency: "",
   userPlaceId: "",
   userWeather: "",
   userTemp: 0,
@@ -102,6 +112,8 @@ export const useStore = create<State>((set) => ({
   userLong: 0,
   selectedCityLat: 0,
   selectedCityLong: 0,
+  searchedCityLat: 0,
+  searchedCityLong: 0,
   isLocationModalOpen: false,
   nearbyCitiesArray: [],
   isViewingHome: true,
@@ -115,10 +127,12 @@ export const useStore = create<State>((set) => ({
     set({ selectedCityDriveTime: driveTime }),
   setSelectedCityFlightTime: (flightTime: string) =>
     set({ selectedCityFlightTime: flightTime }),
-  setSelectedCityTransportTime: (transportTime: string) =>
-    set({ selectedCityTransportTime: transportTime }),
-  setSelectedCityWeatherData: (weatherData: YahooWeatherObject[]) =>
+  setSelectedCityTransitTime: (transitTime: string) =>
+    set({ selectedCityTransitTime: transitTime }),
+  setSelectedCityWeatherData: (weatherData: WeatherApiWeatherObject[]) =>
     set({ selectedCityWeatherData: weatherData }),
+  setSelectedCityFlightLink: (link: string) =>
+    set({ selectedCityFlightLink: link }),
   setPeopleCount: (people: number) => set({ peopleCount: people }),
   setDesiredWeather: (weather: string) => set({ desiredWeather: weather }),
   setStartDate: (date: Date) => set({ startDate: date }),
@@ -130,6 +144,7 @@ export const useStore = create<State>((set) => ({
     set({ userFullLocationName: location }),
   setUserCity: (city) => set({ userCity: city }),
   setUserCountry: (country) => set({ userCountry: country }),
+  setUserCurrency: (currency) => set({ userCurrency: currency }),
   setUserPlaceId: (placeId) => set({ userPlaceId: placeId }),
   setUserWeather: (weather) => set({ userWeather: weather }),
   setUserTemp: (temp) => set({ userTemp: temp }),
@@ -137,6 +152,8 @@ export const useStore = create<State>((set) => ({
   setUserLong: (longitude) => set({ userLong: longitude }),
   setSelectedCityLat: (latitude) => set({ selectedCityLat: latitude }),
   setSelectedCityLong: (longitude) => set({ selectedCityLong: longitude }),
+  setSearchedCityLat: (latitude) => set({ searchedCityLat: latitude }),
+  setSearchedCityLong: (longitude) => set({ searchedCityLong: longitude }),
   setIsLocationModalOpen: (isOpen) => set({ isLocationModalOpen: isOpen }),
   setNearbyCitiesArray: (array) => set({ nearbyCitiesArray: array }),
   setIsViewingHome: (isViewingHome) => set({ isViewingHome: isViewingHome }),

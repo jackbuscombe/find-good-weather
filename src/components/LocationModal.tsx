@@ -34,10 +34,30 @@ export default function LocationModal() {
   );
   const lat = useStore((state) => state.selectedCityLat);
   const long = useStore((state) => state.selectedCityLong);
+  const selectedCityName = useStore((state) => state.selectedCityName);
+  const selectedCountryName = useStore((state) => state.selectedCountryName);
+  const userLat = useStore((state) => state.userLat);
+  const userLong = useStore((state) => state.userLong);
+  const selectedCityLat = useStore((state) => state.selectedCityLat);
+  const selectedCityLong = useStore((state) => state.selectedCityLong);
+  const selectedCityWeatherData = useStore(
+    (state) => state.selectedCityWeatherData
+  );
+  const selectedCityDriveTime = useStore(
+    (state) => state.selectedCityDriveTime
+  );
+  const selectedCityTransitTime = useStore(
+    (state) => state.selectedCityTransitTime
+  );
+  const selectedCityFlightLink = useStore(
+    (state) => state.selectedCityFlightLink
+  );
+  const startDate = useStore((state) => state.startDate);
+  const endDate = useStore((state) => state.endDate);
+  const setStartDate = useStore((state) => state.setStartDate);
+  const setEndDate = useStore((state) => state.setEndDate);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const datepickerWrapperRef = useRef(null);
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
   const [isDatepickerOpen, setIsDatepickerOpen] = useState(false);
 
   const { data: cityForecast } = trpc.useQuery(
@@ -179,25 +199,46 @@ export default function LocationModal() {
                           as="h3"
                           className="text-3xl text-gray-900 font-extrabold"
                         >
-                          Berlin
+                          {selectedCityName}
                         </Dialog.Title>
                         <div className="mt-2">
-                          <p className="text-gray-500">Germany</p>
+                          <p className="text-gray-500">{selectedCountryName}</p>
                         </div>
                       </div>
                       {/* Transport and Close Button */}
                       <div className="flex space-x-6 text-xl">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 hover:text-blue-500 group hover:underline">
                           <RiPlaneLine />
-                          <p className="text-gray-500">3 h. 35 m.</p>
+                          <a
+                            href={selectedCityFlightLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-gray-500 group-hover:text-blue-500"
+                          >
+                            3 h. 35 m.
+                          </a>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 hover:text-blue-500 group hover:underline">
                           <RiTrainLine />
-                          <p className="text-gray-500">2 h.</p>
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${selectedCityLat},${selectedCityLong}&travelmode=transit`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-gray-500 group-hover:text-blue-500"
+                          >
+                            {selectedCityTransitTime}
+                          </a>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 hover:text-blue-500 group hover:underline">
                           <RiCarLine />
-                          <p className="text-gray-500">1 h.</p>
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${selectedCityLat},${selectedCityLong}&travelmode=driving`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-gray-500 group-hover:text-blue-500"
+                          >
+                            {selectedCityDriveTime}
+                          </a>
                         </div>
                         <div
                           onClick={() => setIsLocationModalOpen(false)}
@@ -265,41 +306,6 @@ export default function LocationModal() {
                           )}
                         </>
                       </SearchFormField>
-                      <SearchFormField
-                        title="People"
-                        icon={
-                          <BiUser className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />
-                        }
-                      >
-                        <SearchFieldPeople
-                          options={[
-                            {
-                              value: 1,
-                              label: "1 Adult",
-                            },
-                            {
-                              value: 2,
-                              label: "2 Adults",
-                            },
-                            {
-                              value: 3,
-                              label: "3 Adults",
-                            },
-                            {
-                              value: 4,
-                              label: "4 Adults",
-                            },
-                            {
-                              value: 5,
-                              label: "5 Adults",
-                            },
-                            {
-                              value: 6,
-                              label: "6 Adults",
-                            },
-                          ]}
-                        />
-                      </SearchFormField>
                     </div>
 
                     {/* Row 3 - Weather */}
@@ -307,7 +313,7 @@ export default function LocationModal() {
                       <div className="flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
                         <FiChevronLeft />
                       </div>
-                      {cityForecast?.forecast
+                      {selectedCityWeatherData
                         .slice(0, 7)
                         .map(
                           (
