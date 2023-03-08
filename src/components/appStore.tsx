@@ -51,6 +51,7 @@ type State = {
   nearbyCitiesArray: NearbyCity[];
   isViewingHome: boolean;
   currentAirportIata: string;
+  selectedAirportIata: string;
   setSelectedCityName: (cityName: string) => void;
   setSelectedCountryName: (countryName: string) => void;
   setSelectedLocationId: (locationId: string) => void;
@@ -83,6 +84,7 @@ type State = {
   setNearbyCitiesArray: (array: NearbyCity[]) => void;
   setIsViewingHome: (isViewingHome: boolean) => void;
   setCurrentAirportIata: (currentAirportIata: string) => void;
+  setSelectedAirportIata: (selectedAirportIata: string) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -118,6 +120,7 @@ export const useStore = create<State>((set) => ({
   nearbyCitiesArray: [],
   isViewingHome: true,
   currentAirportIata: "",
+  selectedAirportIata: "",
   setSelectedCityName: (cityName) => set({ selectedCityName: cityName }),
   setSelectedCountryName: (countryName) =>
     set({ selectedCountryName: countryName }),
@@ -158,4 +161,5 @@ export const useStore = create<State>((set) => ({
   setNearbyCitiesArray: (array) => set({ nearbyCitiesArray: array }),
   setIsViewingHome: (isViewingHome) => set({ isViewingHome: isViewingHome }),
   setCurrentAirportIata: (currentAirportIata) => set({ currentAirportIata }),
+  setSelectedAirportIata: (selectedAirportIata) => set({ selectedAirportIata }),
 }));

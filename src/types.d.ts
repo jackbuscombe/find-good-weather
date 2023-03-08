@@ -63,3 +63,19 @@ export type GeonameResult = {
   distance: number;
   isFarPlace: boolean;
 };
+
+export type Flight = {
+  value: number;
+  trip_class: 0 | 1 | 2;
+  show_to_affiliates: boolean;
+  origin: string;
+  destination: string;
+  gate: string;
+  depart_date: string;
+  return_date: string;
+  number_of_changes: number;
+  found_at: string;
+  duration: number;
+  distance: number;
+  actual: boolean;
+};

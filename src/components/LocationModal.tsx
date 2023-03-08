@@ -26,6 +26,8 @@ import { add, format } from "date-fns";
 import { BiChevronDown, BiUser } from "react-icons/bi";
 import SearchFieldPeople from "./SearchFields/SearchFieldPeople";
 import { DateRangePicker } from "react-date-range";
+import FlightsList from "./ModalComponents/FlightsList";
+import TrainsList from "./ModalComponents/TrainsList";
 
 export default function LocationModal() {
   const isLocationModalOpen = useStore((state) => state.isLocationModalOpen);
@@ -48,6 +50,9 @@ export default function LocationModal() {
   );
   const selectedCityTransitTime = useStore(
     (state) => state.selectedCityTransitTime
+  );
+  const selectedCityFlightTime = useStore(
+    (state) => state.selectedCityFlightTime
   );
   const selectedCityFlightLink = useStore(
     (state) => state.selectedCityFlightLink
@@ -72,13 +77,13 @@ export default function LocationModal() {
   // MOCK DATA
   const [categories] = useState({
     "THINGS TO DO": <AttractionsList lat={lat} long={long} />,
-    FLIGHT: <AttractionsList lat={lat} long={long} />,
-    TRAINS: <AttractionsList lat={lat} long={long} />,
+    FLIGHTS: <FlightsList lat={lat} long={long} />,
+    TRAINS: <TrainsList lat={lat} long={long} />,
     ACCOMMODATION: <AccommodationList lat={lat} long={long} />,
-    REVIEWS: <AccommodationList lat={lat} long={long} />,
     RESTAURANTS: <RestaurantsList lat={lat} long={long} />,
-    INSTAGRAM: <RestaurantsList lat={lat} long={long} />,
-    "TIK TOK": <RestaurantsList lat={lat} long={long} />,
+    // REVIEWS: <AccommodationList lat={lat} long={long} />,
+    // INSTAGRAM: <RestaurantsList lat={lat} long={long} />,
+    // "TIK TOK": <RestaurantsList lat={lat} long={long} />,
   });
   // MOCK DATA END
 
@@ -213,9 +218,9 @@ export default function LocationModal() {
                             href={selectedCityFlightLink}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-gray-500 group-hover:text-blue-500"
+                            className="text-gray-500 group-hover:text-blue-500 outline-none"
                           >
-                            3 h. 35 m.
+                            {selectedCityFlightTime}
                           </a>
                         </div>
                         <div className="flex items-center space-x-2 hover:text-blue-500 group hover:underline">
@@ -224,7 +229,7 @@ export default function LocationModal() {
                             href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${selectedCityLat},${selectedCityLong}&travelmode=transit`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-gray-500 group-hover:text-blue-500"
+                            className="text-gray-500 group-hover:text-blue-500 outline-none"
                           >
                             {selectedCityTransitTime}
                           </a>
@@ -235,7 +240,7 @@ export default function LocationModal() {
                             href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${selectedCityLat},${selectedCityLong}&travelmode=driving`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-gray-500 group-hover:text-blue-500"
+                            className="text-gray-500 group-hover:text-blue-500 outline-none"
                           >
                             {selectedCityDriveTime}
                           </a>
@@ -362,9 +367,13 @@ export default function LocationModal() {
                       <Tab.Panels className="mt-2">
                         {selectedIndex === 0 ? (
                           <AttractionsList lat={lat} long={long} />
+                        ) : selectedIndex == 1 ? (
+                          <FlightsList lat={lat} long={long} />
+                        ) : selectedIndex === 2 ? (
+                          <TrainsList lat={lat} long={long} />
                         ) : selectedIndex === 3 ? (
                           <AccommodationList lat={lat} long={long} />
-                        ) : selectedIndex === 5 ? (
+                        ) : selectedIndex === 4 ? (
                           <RestaurantsList lat={lat} long={long} />
                         ) : (
                           <div>

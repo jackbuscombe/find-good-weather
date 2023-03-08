@@ -28,6 +28,7 @@ import milesToKm from "../utils/milesToKm";
 import { FaPlaneDeparture } from "react-icons/fa";
 import { add, format } from "date-fns";
 import { getWeatherDescriptionFromCode } from "../utils/getWeatherDescriptionFromCode";
+import secondsToDhm from "../utils/secondsToDhm";
 
 type Props = {
   name: string;
@@ -70,6 +71,7 @@ function CityResultVertical({
   const [forecast, setForecast] = useState<WeatherObject[]>();
   const celsius = useStore((state) => state.celsius);
   const userCity = useStore((state) => state.userCity);
+  const userCurrency = useStore((state) => state.userCurrency);
   const userLat = useStore((state) => state.userLat);
   const userLong = useStore((state) => state.userLong);
   const selectedCityName = useStore((state) => state.selectedCityName);
@@ -113,6 +115,10 @@ function CityResultVertical({
   const setSelectedCityLat = useStore((state) => state.setSelectedCityLat);
   const selectedCityLong = useStore((state) => state.selectedCityLong);
   const setSelectedCityLong = useStore((state) => state.setSelectedCityLong);
+  const selectedAirportIata = useStore((state) => state.selectedAirportIata);
+  const setSelectedAirportIata = useStore(
+    (state) => state.setSelectedAirportIata
+  );
   const [hiddenResult, setHiddenResult] = useState(false);
   const isViewingHome = useStore((state) => state.isViewingHome);
   const [flightLink, setFlightLink] = useState("");
@@ -204,14 +210,14 @@ function CityResultVertical({
   // 	cacheTime: Infinity,
   // });
 
-  const { data: locationDetails } = trpc.useQuery(
-    ["places.getPlaceDetailsFromCityName", { selectedCityName: name }],
-    {
-      enabled: !!name,
-      staleTime: Infinity,
-      cacheTime: Infinity,
-    }
-  );
+  // const { data: locationDetails } = trpc.useQuery(
+  //   ["places.getPlaceDetailsFromCityName", { selectedCityName: name }],
+  //   {
+  //     enabled: !!name,
+  //     staleTime: Infinity,
+  //     cacheTime: Infinity,
+  //   }
+  // );
 
   // Currently Functional
   //   const { data: cityDetails } = trpc.useQuery(
@@ -294,6 +300,26 @@ function CityResultVertical({
     );
   }, [currentAirportIata, airportIata, startDate, endDate]);
 
+  const { data: flights } = trpc.useQuery(
+    [
+      "flights.getFlights",
+      {
+        originIata: currentAirportIata,
+        destinationIata: airportIata ?? "",
+        currency: userCurrency,
+        isOneWay: true,
+        departureDate: format(add(startDate, { days: 2 }), "yyyy-MM-dd"),
+        returnData: format(add(startDate, { days: 6 }), "yyyy-MM-dd"),
+      },
+    ],
+    {
+      enabled:
+        !!currentAirportIata && !!airportIata && !!userCurrency && !!startDate,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+    }
+  );
+
   // Update Forecast with startDate and endDate
   useMemo(() => {
     if (startDate < new Date()) return;
@@ -323,10 +349,10 @@ function CityResultVertical({
   //   }
   // }, [travelTime]);
 
-  useEffect(() => {
-    if (!locationDetails) return;
-    setFetchedCountryName(locationDetails);
-  }, [locationDetails]);
+  // useEffect(() => {
+  //   if (!locationDetails) return;
+  //   setFetchedCountryName(locationDetails);
+  // }, [locationDetails]);
 
   const weatherScore = useMemo(() => {
     if (!cityForecast) return;
@@ -417,7 +443,13 @@ function CityResultVertical({
         setSelectedCityWeatherData(cityForecast?.forecast ?? []);
         setSelectedCityDriveTime(travelTime?.travelTimeDriving ?? "N/A");
         setSelectedCityTransitTime(travelTime?.travelTimeTransit ?? "N/A");
+        setSelectedCityFlightTime(
+          flights && flights.length > 0
+            ? secondsToDhm(flights[0] ? flights[0]?.duration * 60 : 0)
+            : "N/A"
+        );
         setSelectedCityFlightLink(flightLink);
+        setSelectedAirportIata(airportIata ?? "");
       }}
       className={`${hiddenResult && "hidden"}`}
       ref={resultRef}
@@ -484,7 +516,9 @@ function CityResultVertical({
               >
                 <RiPlaneLine size={26} />
                 <p className="text-gray-500 group-hover:text-blue-500">
-                  {flightTime ?? "N/A"}
+                  {flights &&
+                    flights.length > 0 &&
+                    (secondsToDhm((flights[0]?.duration ?? 0) * 60) ?? "N/A")}
                 </p>
               </a>
               <a

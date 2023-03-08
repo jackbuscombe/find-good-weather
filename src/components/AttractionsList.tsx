@@ -46,35 +46,61 @@ function AttractionsList({ lat, long }: Props) {
             vicinity,
             lat,
             long,
+            editorialSummary,
           }) => (
             <div
               key={placeId}
               className="flex justify-between w-full bg-white rounded-lg shadow p-4 hover:bg-gray-100 cursor-pointer transform transition ease-in-out"
             >
-              <div className="flex space-x-3">
+              <div className="flex space-x-5">
                 <img
                   src={photo != "" ? photo : "/no-image-placeholder.jpg"}
                   alt={name}
                   className="h-32 w-32 object-cover rounded-lg"
                 />
-                <div className="pt-3">
-                  <h3 className="text-xl font-bold">{name}</h3>
-                  {vicinity && <p className="text-gray-500">{vicinity}</p>}
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold">{name}</h3>
+                    {vicinity && (
+                      <p className="text-gray-500">
+                        {editorialSummary || vicinity}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${lat}%2C${long}&query_place_id=${placeId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-3 rounded-lg bg-gray-200 hover:bg-gray-300 transition ease-in-out font-bold"
+                    >
+                      SHOW ON THE MAP
+                    </a>
+                  </div>
                 </div>
               </div>
-              <div className="pt-3">
+              <div className="flex flex-col space-y-4 pt-3">
                 {rating > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-yellow-500">
-                      <BsStarFill />
-                    </span>
-                    <p className="font-bold">{rating} / 5</p>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-yellow-500">
+                        <BsStarFill />
+                      </span>
+                      <p className="font-bold">{rating} / 5</p>
+                    </div>
+                    {userRatingsTotal > 0 && <p>{userRatingsTotal} reviews</p>}
                   </div>
                 )}
-                {userRatingsTotal > 0 && <p>{userRatingsTotal} reviews</p>}
-                <button className="bg-blue-500 text-white p-2 rounded mt-4 font-bold hover:bg-500">
-                  BOOK NOW
-                </button>
+                <div>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${lat}%2C${long}&query_place_id=${placeId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-blue-500 text-white p-3 rounded mt-4 font-bold hover:bg-500"
+                  >
+                    BOOK NOW
+                  </a>
+                </div>
               </div>
             </div>
           )
