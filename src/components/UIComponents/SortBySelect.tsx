@@ -2,20 +2,21 @@ import { useState, Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { BsFillPatchCheckFill, BsChevronDown } from "react-icons/bs";
 
-type SortByOptions = "Best Weather" | "Worst Weather";
+type SortByOptions = "distance" | "population";
 
-// const sortByOptions = ["best_weather", "worst_weather"];
-const sortByOptions = ["Best Weather", "Worst Weather"];
+const sortByOptions = ["distance", "population"];
 
 export default function SortBySelect() {
-  const [sortBy, setSortBy] = useState<SortByOptions>("Best Weather");
+  const [sortBy, setSortBy] = useState<SortByOptions>("distance");
 
   return (
     <div className="font-sans w-56 z-10">
       <Listbox value={sortBy} onChange={setSortBy}>
         <div className="relative mt-1">
           <Listbox.Button className="relative w-full cursor-pointer rounded-lg bg-gray-100 py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 text-sm">
-            <span className="block shrink truncate">{sortBy}</span>
+            <span className="block shrink truncate">
+              {sortBy.charAt(0).toUpperCase() + sortBy.slice(1)}
+            </span>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
               <BsChevronDown
                 className="h-5 w-5 text-gray-400"
@@ -47,7 +48,7 @@ export default function SortBySelect() {
                           selected ? "font-medium" : "font-normal"
                         }`}
                       >
-                        {option}
+                        {option.charAt(0).toUpperCase() + option.slice(1)}
                       </span>
                       {selected ? (
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">

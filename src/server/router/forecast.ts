@@ -3,6 +3,7 @@ import { z } from "zod";
 import axios from "axios";
 import { WeatherApiWeatherObject, YahooWeatherObject } from "../../types";
 import { add, format } from "date-fns";
+import isBadWeather from "../../utils/isBadWeather";
 
 export const forecastRouter = createRouter()
   .query("getForecast", {
@@ -62,11 +63,12 @@ export const forecastRouter = createRouter()
       }
     },
   })
-  .query("getWeatherApiForecastByLatLong", {
+  .query("getWeatherApiForecastByLatLongOld", {
     input: z.object({
       lat: z.number(),
       lon: z.number(),
       days: z.optional(z.number()),
+      isHome: z.boolean(),
     }),
     async resolve({ input }) {
       try {
@@ -92,19 +94,53 @@ export const forecastRouter = createRouter()
             temp_max_f: response.data.forecast.forecastday[i].day.maxtemp_f,
             temp_min_c: response.data.forecast.forecastday[i].day.mintemp_c,
             temp_min_f: response.data.forecast.forecastday[i].day.mintemp_f,
-            condition: response.data.forecast.forecastday[i].day.condition.code,
+            condition: response.data.forecast.forecastday[i].day.condition.text,
+            conditionCode:
+              response.data.forecast.forecastday[i].day.condition.code,
           });
         }
 
         // console.log("Forecast: ", forecast);
-        return {
-          cityName,
-          countryName,
-          forecast,
-        };
+        return forecast;
       } catch (error) {
         console.log("Error Fetching New Forecast", error);
         // return error;
+      }
+    },
+  })
+  .query("getWeatherApiForecastByLatLong", {
+    input: z.object({
+      lat: z.number(),
+      lon: z.number(),
+      days: z.optional(z.number()),
+      isHome: z.boolean(),
+    }),
+    async resolve({ input }) {
+      const weatherResponse = await axios.get(
+        `http://api.weatherapi.com/v1/forecast.json?key=${process.env.WEATHERAPI_API_TOKEN}&q=${input.lat},${input.lon}&days=10&aqi=no&alerts=no`
+      );
+
+      const weatherResponseResult = weatherResponse.data.forecast.forecastday;
+
+      const forecast: WeatherApiWeatherObject[] = [];
+
+      for (let j = 0; j < weatherResponseResult.length; j++) {
+        forecast.push({
+          date: weatherResponseResult[j].date_epoch,
+          temp_c: weatherResponseResult[j].day.avgtemp_c,
+          temp_f: weatherResponseResult[j].day.avgtemp_f,
+          temp_max_c: weatherResponseResult[j].day.maxtemp_c,
+          temp_max_f: weatherResponseResult[j].day.maxtemp_f,
+          temp_min_c: weatherResponseResult[j].day.mintemp_c,
+          temp_min_f: weatherResponseResult[j].day.mintemp_f,
+          condition: weatherResponseResult[j].day.condition.text,
+          conditionCode: weatherResponseResult[j].day.condition.code,
+        });
+      }
+
+      // Only Return if GoodWeather
+      if (input.isHome || !isBadWeather(forecast)) {
+        return forecast;
       }
     },
   })
@@ -148,7 +184,9 @@ export const forecastRouter = createRouter()
           temp_c: response.data.forecast.forecastday[0].day.avgtemp_c,
           temp_max_c: response.data.forecast.forecastday[0].day.maxtemp_c,
           temp_min_c: response.data.forecast.forecastday[0].day.mintemp_c,
-          condition: response.data.forecast.forecastday[0].day.condition.code,
+          condition: response.data.forecast.forecastday[0].day.condition.text,
+          conditionCode:
+            response.data.forecast.forecastday[0].day.condition.code,
         });
 
         if (dateArray.length == 1) {
@@ -182,5 +220,20 @@ export const forecastRouter = createRouter()
       } catch (error) {
         console.log("Error Fetching New Forecast", error);
       }
+    },
+  })
+  .query("getWeatherWithFilter", {
+    input: z.object({
+      lat: z.number(),
+      lon: z.number(),
+      isHome: z.boolean(),
+    }),
+    async resolve({ input }) {
+      // do Something
+      if (!input.isHome) {
+        // Filter
+      }
+
+      return;
     },
   });

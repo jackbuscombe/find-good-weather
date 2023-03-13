@@ -13,7 +13,8 @@ type Props = {
   avg: number;
   low: number;
   high: number;
-  text: number;
+  text: string;
+  conditionCode: number;
   isCurrentDay?: boolean;
 };
 
@@ -23,6 +24,7 @@ function WeatherCell({
   low,
   high,
   text,
+  conditionCode,
   isCurrentDay = false,
 }: Props) {
   const [opened, { close, open }] = useDisclosure(false);
@@ -53,24 +55,32 @@ function WeatherCell({
                 src={
                   isCurrentDay
                     ? getWeatherIconCurrent(
-                        (
-                          getWeatherDescriptionFromCode as {
-                            [index: number]: string;
-                          }
-                        )[text] ?? "clear"
+                        (text ||
+                          (
+                            getWeatherDescriptionFromCode as {
+                              [index: number]: string;
+                            }
+                          )[conditionCode]) ??
+                          "clear"
                       )
                     : getWeatherIcon(
-                        (
-                          getWeatherDescriptionFromCode as {
-                            [index: number]: string;
-                          }
-                        )[text] ?? "clear"
+                        (text ||
+                          (
+                            getWeatherDescriptionFromCode as {
+                              [index: number]: string;
+                            }
+                          )[conditionCode]) ??
+                          "clear"
                       )
                 }
                 alt={
-                  (
-                    getWeatherDescriptionFromCode as { [index: number]: string }
-                  )[text] ?? "clear"
+                  (text ||
+                    (
+                      getWeatherDescriptionFromCode as {
+                        [index: number]: string;
+                      }
+                    )[conditionCode]) ??
+                  "clear"
                 }
                 className="h-10 w-10"
               />
@@ -106,14 +116,19 @@ function WeatherCell({
             <div className="flex justify-center items-center space-x-4 mb-2">
               <img
                 src={getWeatherIcon(
-                  (
-                    getWeatherDescriptionFromCode as { [index: number]: string }
-                  )[text] ?? "clear"
+                  (text ||
+                    (
+                      getWeatherDescriptionFromCode as {
+                        [index: number]: string;
+                      }
+                    )[conditionCode]) ??
+                    "clear"
                 )}
                 alt={
+                  text ||
                   (
                     getWeatherDescriptionFromCode as { [index: number]: string }
-                  )[text]
+                  )[conditionCode]
                 }
                 className="h-12 w-12"
               />
@@ -125,13 +140,12 @@ function WeatherCell({
                     : `${celsiusToFahrenheit(avg).toFixed(0)}°F`
                 }`}</p>
                 <p className="text-gray-500">
-                  {
+                  {text ||
                     (
                       getWeatherDescriptionFromCode as {
                         [index: number]: string;
                       }
-                    )[text]
-                  }
+                    )[conditionCode]}
                 </p>
               </div>
             </div>

@@ -34,6 +34,7 @@ export default function LocationModal() {
   const setIsLocationModalOpen = useStore(
     (state) => state.setIsLocationModalOpen
   );
+  const id = useStore((state) => state.selectedCityGeonameId);
   const lat = useStore((state) => state.selectedCityLat);
   const long = useStore((state) => state.selectedCityLong);
   const selectedCityName = useStore((state) => state.selectedCityName);
@@ -64,15 +65,6 @@ export default function LocationModal() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const datepickerWrapperRef = useRef(null);
   const [isDatepickerOpen, setIsDatepickerOpen] = useState(false);
-
-  const { data: cityForecast } = trpc.useQuery(
-    ["forecast.getWeatherApiForecastByLatLong", { lat, lon: long, days: 10 }],
-    {
-      enabled: !!lat && !!long,
-      staleTime: Infinity,
-      cacheTime: Infinity,
-    }
-  );
 
   // MOCK DATA
   const [categories] = useState({
@@ -112,6 +104,23 @@ export default function LocationModal() {
     }, [ref]);
   }
 
+  const { data: imagesArray, isLoading: isLoadingImagesArray } = trpc.useQuery(
+    [
+      "places.getWikiMediaModalImagesFromGeonamesId",
+      { geoNamesId: parseInt(id) },
+    ],
+    {
+      enabled: isLocationModalOpen === true && !!id,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+    }
+  );
+
+  useEffect(() => {
+    if (!imagesArray) return;
+    console.log("ImagesArray: ", imagesArray);
+  }, [imagesArray]);
+
   return (
     <>
       <Transition appear show={isLocationModalOpen} as={Fragment}>
@@ -144,34 +153,43 @@ export default function LocationModal() {
                 leaveTo="opacity-0 scale-95"
               >
                 <Dialog.Panel className="w-full max-w-7xl max-h-[90vh] overflow-auto transform rounded-2xl bg-gray-100 text-left align-middle shadow-xl transition-all font-mono">
-                  <Carousel
-                    withIndicators
-                    height={200}
-                    slideSize="33.333333%"
-                    nextControlIcon={
-                      <div className="bg-white rounded-full p-1">
-                        <GrLinkNext size={16} />
-                      </div>
-                    }
-                    previousControlIcon={
-                      <div className="bg-white rounded-full p-1">
-                        <GrLinkPrevious size={16} />
-                      </div>
-                    }
-                    breakpoints={[
-                      { maxWidth: "md", slideSize: "50%" },
-                      { maxWidth: "sm", slideSize: "100%", slideGap: 0 },
-                    ]}
-                    loop
-                    align="start"
-                  >
-                    <Carousel.Slide>
-                      <img
-                        src={`https://lp-cms-production.imgix.net/2021-01/shutterstockRF_150264563.jpg?auto=format&q=75&w=1024`}
-                        className="h-full w-full object-cover"
-                      />
-                    </Carousel.Slide>
-                    <Carousel.Slide>
+                  {isLoadingImagesArray ? (
+                    <div className="w-full flex justify-center items-center py-12">
+                      <Ring />
+                    </div>
+                  ) : imagesArray && imagesArray.length > 0 ? (
+                    <Carousel
+                      withIndicators
+                      height={200}
+                      slideSize="33.333333%"
+                      nextControlIcon={
+                        <div className="bg-white rounded-full p-1">
+                          <GrLinkNext size={16} />
+                        </div>
+                      }
+                      previousControlIcon={
+                        <div className="bg-white rounded-full p-1">
+                          <GrLinkPrevious size={16} />
+                        </div>
+                      }
+                      breakpoints={[
+                        { maxWidth: "md", slideSize: "50%" },
+                        { maxWidth: "sm", slideSize: "100%", slideGap: 0 },
+                      ]}
+                      loop
+                      align="start"
+                    >
+                      {imagesArray?.map((image) => (
+                        <Carousel.Slide>
+                          <img
+                            src={image}
+                            className="h-full w-full object-cover"
+                          />
+                        </Carousel.Slide>
+                      ))}
+                    </Carousel>
+                  ) : null}
+                  {/* <Carousel.Slide>
                       <img
                         src={`https://lp-cms-production.imgix.net/2021-06/GettyRF_543739496.jpg?auto=format&q=75&w=1024`}
                         className="h-full w-full object-cover"
@@ -194,8 +212,7 @@ export default function LocationModal() {
                         src={`https://lp-cms-production.imgix.net/2021-05/shutterstockRF_691687414.jpg?auto=format&q=75&w=1024`}
                         className="h-full w-full object-cover"
                       />
-                    </Carousel.Slide>
-                  </Carousel>
+                    </Carousel.Slide> */}
                   <div className="w-full p-6 bg-white">
                     {/* Row 1 */}
                     <div className="flex justify-between items-center">
@@ -322,7 +339,14 @@ export default function LocationModal() {
                         .slice(0, 7)
                         .map(
                           (
-                            { date, temp_c, temp_max_c, temp_min_c, condition },
+                            {
+                              date,
+                              temp_c,
+                              temp_max_c,
+                              temp_min_c,
+                              condition,
+                              conditionCode,
+                            },
                             i
                           ) => (
                             <WeatherCellNew
@@ -332,6 +356,7 @@ export default function LocationModal() {
                               low={temp_min_c}
                               high={temp_max_c}
                               text={condition}
+                              conditionCode={conditionCode}
                               isCurrentDay={i == 0 ? true : false}
                             />
                           )

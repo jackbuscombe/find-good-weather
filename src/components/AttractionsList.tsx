@@ -22,11 +22,6 @@ function AttractionsList({ lat, long }: Props) {
     }
   );
 
-  useEffect(() => {
-    if (!attractions) return;
-    console.log("attractions list is", attractions);
-  }, [attractions]);
-
   return (
     <div className="w-full flex flex-col space-y-2">
       {isLoading && (

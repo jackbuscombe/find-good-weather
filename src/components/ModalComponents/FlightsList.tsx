@@ -46,11 +46,6 @@ export default function FlightsList({ lat, long }: Props) {
     }
   );
 
-  useEffect(() => {
-    if (!flights) return;
-    console.log("flights list is", flights);
-  }, [flights]);
-
   return (
     <div className="w-full flex flex-col space-y-2">
       {isLoading && (

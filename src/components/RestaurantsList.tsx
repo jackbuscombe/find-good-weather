@@ -22,11 +22,6 @@ function RestaurantsList({ lat, long }: Props) {
     }
   );
 
-  useEffect(() => {
-    if (!restaurants) return;
-    console.log("Restaurants list is", restaurants);
-  }, [restaurants]);
-
   return (
     <div className="w-full flex flex-col space-y-2">
       {isLoading && (

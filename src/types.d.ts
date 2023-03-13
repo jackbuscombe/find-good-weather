@@ -31,7 +31,8 @@ export type WeatherApiWeatherObject = {
   temp_max_f: number;
   temp_min_c: number;
   temp_min_f: number;
-  condition: number;
+  condition: string;
+  conditionCode: number;
   //   }[];
 };
 
@@ -62,6 +63,7 @@ export type GeonameResult = {
   countryName: string;
   distance: number;
   isFarPlace: boolean;
+  isHome: boolean;
 };
 
 export type Flight = {

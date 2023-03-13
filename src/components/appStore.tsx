@@ -19,6 +19,7 @@ type NearbyCity = {
 };
 
 type State = {
+  selectedCityGeonameId: string;
   selectedCityName: string;
   selectedCountryName: string;
   selectedLocationId: string;
@@ -52,6 +53,7 @@ type State = {
   isViewingHome: boolean;
   currentAirportIata: string;
   selectedAirportIata: string;
+  setSelectedCityGeonameId: (id: string) => void;
   setSelectedCityName: (cityName: string) => void;
   setSelectedCountryName: (countryName: string) => void;
   setSelectedLocationId: (locationId: string) => void;
@@ -88,6 +90,7 @@ type State = {
 };
 
 export const useStore = create<State>((set) => ({
+  selectedCityGeonameId: "",
   selectedCityName: "",
   selectedCountryName: "",
   selectedLocationId: "",
@@ -121,6 +124,7 @@ export const useStore = create<State>((set) => ({
   isViewingHome: true,
   currentAirportIata: "",
   selectedAirportIata: "",
+  setSelectedCityGeonameId: (id) => set({ selectedCityGeonameId: id }),
   setSelectedCityName: (cityName) => set({ selectedCityName: cityName }),
   setSelectedCountryName: (countryName) =>
     set({ selectedCountryName: countryName }),

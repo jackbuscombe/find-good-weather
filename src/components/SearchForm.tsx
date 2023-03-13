@@ -144,7 +144,7 @@ function SearchForm({ className, refetch }: Props) {
     const lng = autocomplete?.getPlace()?.geometry?.location?.lng();
     const cityName = autocomplete?.getPlace()?.name ?? "";
     const addressComponentsArray = autocomplete?.getPlace()?.address_components;
-    console.log("Address Components Array", autocomplete.getPlace());
+
     const countryName =
       addressComponentsArray?.[addressComponentsArray.length - 1]?.long_name ??
       "";

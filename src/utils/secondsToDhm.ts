@@ -5,9 +5,9 @@ export default function secondsToDhm(seconds: number) {
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
 
-  const dDisplay = d > 0 ? d + (d == 1 ? " day " : " days ") : "";
-  const hDisplay = h > 0 ? h + (h == 1 ? " hr " : " hrs ") : "";
-  const mDisplay = m > 0 ? m + (m == 1 ? " min " : " mins ") : "";
-  const sDisplay = s > 0 ? s + (s == 1 ? " sec" : " secs") : "";
+  const dDisplay = d > 0 ? d + (d == 1 ? "d. " : "d. ") : "";
+  const hDisplay = h > 0 ? h + (h == 1 ? "h. " : "h. ") : "";
+  const mDisplay = m > 0 ? m + (m == 1 ? "m. " : "m. ") : "";
+  const sDisplay = s > 0 ? s + (s == 1 ? "s." : "s.") : "";
   return dDisplay + hDisplay + mDisplay;
 }

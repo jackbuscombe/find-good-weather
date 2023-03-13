@@ -22,11 +22,6 @@ function AccommodationList({ lat, long }: Props) {
     }
   );
 
-  useEffect(() => {
-    if (!accommodations) return;
-    console.log("Accommodations list is", accommodations);
-  }, [accommodations]);
-
   return (
     <div className="w-full flex flex-col space-y-2">
       {isLoading && (

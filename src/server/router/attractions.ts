@@ -16,17 +16,11 @@ export const attractionsRouter = createRouter().query(
         );
         const results = response.data.results;
 
-        console.log("Attraction results", results);
         const attractionsArray = [];
         let photoUrl = "";
 
         for (let i = 0; i < results.length; i++) {
           if (results[i].business_status === "OPERATIONAL") {
-            // Get Place Image
-            console.log(
-              "Photo Ref",
-              results?.[i]?.photos?.[0]?.photo_reference
-            );
             if (!!results?.[i]?.photos?.[0]?.photo_reference) {
               const photoResponse = await axios.get(
                 `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${results[i].photos[0].photo_reference}&key=${process.env.GOOGLE_MAPS_API}`
@@ -35,8 +29,6 @@ export const attractionsRouter = createRouter().query(
             } else {
               photoUrl = "";
             }
-
-            console.log("Place Item: ", results[i]);
 
             attractionsArray.push({
               name: results?.[i]?.name ?? "",
@@ -51,7 +43,6 @@ export const attractionsRouter = createRouter().query(
             });
           }
         }
-        console.log("attractionsArray array", attractionsArray);
         return attractionsArray;
       } catch (error) {
         console.log("Error fetching restaurants", error);

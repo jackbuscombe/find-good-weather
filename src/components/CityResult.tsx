@@ -15,7 +15,11 @@ import { useEffect, useMemo, useState, memo, useRef } from "react";
 import axios from "axios";
 import { useStore } from "./appStore";
 import { Ring } from "@uiball/loaders";
-import { WeatherObject } from "../types";
+import {
+  GeonameResult,
+  WeatherApiWeatherObject,
+  WeatherObject,
+} from "../types";
 import { BsChevronDown, BsChevronUp } from "react-icons/bs";
 import {
   BiBadgeCheck,
@@ -36,9 +40,11 @@ type Props = {
   distance: number;
   lat: number;
   lon: number;
-  isUserHere?: boolean;
+  isHome?: boolean;
   id: string;
   isFarPlace?: boolean;
+  addCity: <T>(id: string) => void;
+  removeCity: <T>(id: string) => void;
 };
 
 function CityResultVertical({
@@ -48,8 +54,10 @@ function CityResultVertical({
   lat,
   lon,
   distance,
-  isUserHere = false,
+  isHome = false,
   isFarPlace = false,
+  addCity,
+  removeCity,
 }: Props) {
   const [isExtended, setIsExtended] = useState(false);
   const [wikidataId, setWikidataId] = useState<string>();
@@ -69,6 +77,9 @@ function CityResultVertical({
   const [restaurantCount, setRestaurantCount] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [forecast, setForecast] = useState<WeatherObject[]>();
+  const setSelectedCityGeonameId = useStore(
+    (state) => state.setSelectedCityGeonameId
+  );
   const celsius = useStore((state) => state.celsius);
   const userCity = useStore((state) => state.userCity);
   const userCurrency = useStore((state) => state.userCurrency);
@@ -137,135 +148,59 @@ function CityResultVertical({
     }
   }, [startDate]);
 
-  // const { data: mainPhotoUrl, isLoading: isLoadingMainPhoto } = trpc.useQuery(
-  //   ["places.getWikiMediaImage", { wikiDataId: id }],
-  //   {
-  //     enabled: !!id,
-  //     staleTime: Infinity,
-  //     cacheTime: Infinity,
-  //   }
-  // );
-
-  // const { data: mainPhotoUrl, isLoading: isLoadingMainPhoto } = trpc.useQuery(
-  //   [
-  //     "places.getWikiMediaImageNewest",
-  //     { lat: lat.toString(), lon: lon.toString() },
-  //   ],
-  //   {
-  //     enabled: !!lat && !!lon,
-  //     staleTime: Infinity,
-  //     cacheTime: Infinity,
-  //   }
-  // );
+  const { data: homePhotoUrl, isLoading: isLoadingHomePhoto } = trpc.useQuery(
+    [
+      "places.getWikiMediaImageNewest",
+      { lat: lat.toString(), lon: lon.toString() },
+    ],
+    {
+      enabled: !!lat && !!lon && isHome,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+    }
+  );
 
   const { data: mainPhotoUrl, isLoading: isLoadingMainPhoto } = trpc.useQuery(
     ["places.getWikiMediaFromGeonamesId", { geoNamesId: parseInt(id) }],
     {
-      enabled: !!id,
+      enabled: !!id && !isHome,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
   );
 
-  // const { data: travelTime } = trpc.useQuery(
-  //   [
-  //     "places.getTravelTimeFromCityName",
-  //     {
-  //       destinationCityName: `${name} ${countryName}`,
-  //       originCityName: `${userCity}`,
-  //     },
-  //   ],
-  //   {
-  //     enabled: !!name && !!countryName && !!userCity,
-  //     staleTime: Infinity,
-  //     cacheTime: Infinity,
-  //   }
-  // );
-
-  const { data: travelTime } = trpc.useQuery(
-    [
-      "places.getTravelTimeFromLatLong",
-      {
-        userLat,
-        userLong,
-        destinationLat: lat,
-        destinationLong: lon,
+  const { data: weather, isLoading: isLoadingWeather } = trpc.useQuery(
+    ["forecast.getWeatherApiForecastByLatLong", { lat, lon, days: 10, isHome }],
+    {
+      enabled: !!lat && !!lon && isHome != undefined,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+      onSuccess: (returnedWeather) => {
+        if (!returnedWeather) {
+          // addCity(id);
+          removeCity(id);
+        }
       },
-    ],
-    {
-      enabled: !!userLat && !!userLong && !!lat && !!lon,
-      staleTime: Infinity,
-      cacheTime: Infinity,
     }
   );
 
-  useEffect(() => {
-    if (!travelTime) return;
-    console.log("TravelTime: ", travelTime);
-  }, [travelTime]);
-
-  // const { data: locationForecast, isLoading } = trpc.useQuery(["forecast.getForecast", { lat, lon }], {
-  // 	enabled: !!lat && !!lon,
-  // 	staleTime: Infinity,
-  // 	cacheTime: Infinity,
-  // });
-
-  // const { data: locationDetails } = trpc.useQuery(
-  //   ["places.getPlaceDetailsFromCityName", { selectedCityName: name }],
-  //   {
-  //     enabled: !!name,
-  //     staleTime: Infinity,
-  //     cacheTime: Infinity,
-  //   }
-  // );
-
-  // Currently Functional
-  //   const { data: cityDetails } = trpc.useQuery(
-  //     ["places.getPlaceDetailsFromCityId", { id }],
-  //     {
-  //       enabled: !!userCity,
-  //       staleTime: Infinity,
-  //       cacheTime: Infinity,
-  //     }
-  //   );
-
-  // Currently Functional - Yahoo Forecast
-  // const { data: cityForecastOld, isLoading: isLoadingCityForecast } =
+  // const { data: cityForecastFuture, isLoading: isLoadingFutureForecast } =
   //   trpc.useQuery(
-  //     ["forecast.getYahooForecastByLatLong", { lat, lon }],
+  //     [
+  //       "forecast.getWeatherApiFutureByLatLongDate",
+  //       {
+  //         startDate: startDate,
+  //         endDate: endDate,
+  //         lat,
+  //         lon,
+  //       },
+  //     ],
   //     {
-  //       enabled: !!lat && !!lon,
-  //       staleTime: Infinity,
+  //       enabled: startDate > add(new Date(), { days: 13 }),
   //       cacheTime: Infinity,
+  //       staleTime: Infinity,
   //     }
   //   );
-
-  const { data: cityForecast } = trpc.useQuery(
-    ["forecast.getWeatherApiForecastByLatLong", { lat, lon, days: 10 }],
-    {
-      enabled: !!lat && !!lon,
-      staleTime: Infinity,
-      cacheTime: Infinity,
-    }
-  );
-
-  const { data: cityForecastFuture, isLoading: isLoadingFutureForecast } =
-    trpc.useQuery(
-      [
-        "forecast.getWeatherApiFutureByLatLongDate",
-        {
-          startDate: startDate,
-          endDate: endDate,
-          lat,
-          lon,
-        },
-      ],
-      {
-        enabled: startDate > add(new Date(), { days: 13 }),
-        cacheTime: Infinity,
-        staleTime: Infinity,
-      }
-    );
 
   const { data: airportIata } = trpc.useQuery(
     [
@@ -284,8 +219,6 @@ function CityResultVertical({
 
   useMemo(() => {
     if (!currentAirportIata || !airportIata || !startDate) return;
-    console.log("Current Airport: "), currentAirportIata;
-    console.log("StartData: ", startDate);
     setFlightLink(
       `https://wayaway.io/?segments[0][origin_iata]=${currentAirportIata}&segments[0][destination_iata]=${airportIata}&segments[0][depart_date]=${format(
         startDate,
@@ -300,7 +233,41 @@ function CityResultVertical({
     );
   }, [currentAirportIata, airportIata, startDate, endDate]);
 
-  const { data: flights } = trpc.useQuery(
+  const { data: driveTime, isLoading: isLoadingDriveTime } = trpc.useQuery(
+    [
+      "places.getDriveTimeFromLatLong",
+      {
+        userLat,
+        userLong,
+        destinationLat: lat,
+        destinationLong: lon,
+      },
+    ],
+    {
+      enabled: !!userLat && !!userLong && !!lat && !!lon,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+    }
+  );
+
+  const { data: transitTime, isLoading: isLoadingTransitTime } = trpc.useQuery(
+    [
+      "places.getTransitTimeFromLatLong",
+      {
+        userLat,
+        userLong,
+        destinationLat: lat,
+        destinationLong: lon,
+      },
+    ],
+    {
+      enabled: !!userLat && !!userLong && !!lat && !!lon,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+    }
+  );
+
+  const { data: flights, isLoading: isLoadingFlights } = trpc.useQuery(
     [
       "flights.getFlights",
       {
@@ -320,24 +287,6 @@ function CityResultVertical({
     }
   );
 
-  // Update Forecast with startDate and endDate
-  useMemo(() => {
-    if (startDate < new Date()) return;
-
-    if (startDate > add(new Date(), { days: 7 })) {
-      console.log("The start date is more than 7 days in the furture");
-    }
-
-    if (endDate > add(new Date(), { days: 7 })) {
-      console.log("The end date is more than 7 days in the furture");
-    }
-  }, [startDate, endDate]);
-
-  useEffect(() => {
-    if (!cityForecast) return;
-    console.log("This is the new cityCorecast", cityForecast);
-  }, [cityForecast]);
-
   // useEffect(() => {
   //   if (!travelTime) return;
   //   console.log("Travel time", travelTime);
@@ -354,72 +303,6 @@ function CityResultVertical({
   //   setFetchedCountryName(locationDetails);
   // }, [locationDetails]);
 
-  const weatherScore = useMemo(() => {
-    if (!cityForecast) return;
-
-    const goodWeather =
-      "clear" &&
-      "sun" &&
-      "sunny" &&
-      "mostly sunny" &&
-      "mostly clear" &&
-      "partly cloudy" &&
-      "fog";
-    const badWeather =
-      "rain" &&
-      "rainy" &&
-      "scattered showers" &&
-      "showers" &&
-      "rain and snow" &&
-      "storms" &&
-      "storm" &&
-      "thunder" &&
-      "thunderstorms" &&
-      "lightning" &&
-      "hail" &&
-      "hail storm" &&
-      "hailing" &&
-      "snow storm" &&
-      "patchy rain possible" &&
-      "moderate rain" &&
-      "heavy rain" &&
-      "patchy rain nearby" &&
-      "moderate or heavy rain shower" &&
-      "moderate or heavy snow showers" &&
-      "moderate rain at times" &&
-      "heavy rain at times";
-
-    let pointTally = 0;
-    let count = 0;
-
-    // Do filter process
-    for (let i = 0; i < cityForecast.forecast.length; i++) {
-      if (
-        (getWeatherDescriptionFromCode as { [index: number]: string })[
-          cityForecast.forecast[i]?.condition as number
-        ] == goodWeather
-      ) {
-        pointTally++;
-      } else if (
-        (getWeatherDescriptionFromCode as { [index: number]: string })[
-          cityForecast.forecast[i]?.condition as number
-        ] == badWeather
-      ) {
-        pointTally--;
-      }
-      count++;
-    }
-    if (pointTally / count < -0.6) {
-      setHiddenResult(true);
-    }
-    return pointTally / count;
-  }, [cityForecast]);
-
-  useEffect(() => {
-    if (!weatherScore) return;
-    console.log("Weatherscore: ", name + weatherScore);
-  }, [weatherScore]);
-
   //   Animations
   const resultRef = useRef(null);
   useEffect(() => {
@@ -435,14 +318,14 @@ function CityResultVertical({
   return (
     <div
       onClick={() => {
-        setIsLocationModalOpen(true);
+        setSelectedCityGeonameId(id);
         setSelectedCityName(name);
         setSelectedCountryName(countryName);
         setSelectedCityLat(lat);
         setSelectedCityLong(lon);
-        setSelectedCityWeatherData(cityForecast?.forecast ?? []);
-        setSelectedCityDriveTime(travelTime?.travelTimeDriving ?? "N/A");
-        setSelectedCityTransitTime(travelTime?.travelTimeTransit ?? "N/A");
+        setSelectedCityWeatherData(weather ?? []);
+        setSelectedCityDriveTime(driveTime ?? "N/A");
+        setSelectedCityTransitTime(transitTime ?? "N/A");
         setSelectedCityFlightTime(
           flights && flights.length > 0
             ? secondsToDhm(flights[0] ? flights[0]?.duration * 60 : 0)
@@ -450,54 +333,61 @@ function CityResultVertical({
         );
         setSelectedCityFlightLink(flightLink);
         setSelectedAirportIata(airportIata ?? "");
+        setIsLocationModalOpen(true);
       }}
-      className={`${hiddenResult && "hidden"}`}
+      // className={`${!weather && "hidden"}`}
       ref={resultRef}
     >
-      <div
-        key={name}
-        className={`grid grid-rows-7 p-4 rounded border shadow transition transform ease-in-out bg-white font-mono cursor-pointer ${
-          isUserHere && "!bg-blue-50 hover:bg-blue-200"
-        } ${!isUserHere && "hover:bg-gray-50"}`}
-      >
-        {/* Row 1 */}
-        <div className="flex justify-center items-center h-28 w-full shadow overflow-hidden rounded-xl mb-4">
-          {isLoadingMainPhoto ? (
-            <Ring />
-          ) : (
-            <img
-              src={mainPhotoUrl || "/no-image-placeholder.jpg"}
-              alt={name}
-              className=""
-            />
-          )}
+      {isLoadingWeather ? (
+        <div className="flex justify-center mt-8 text-white">
+          <Ring color="white" />
         </div>
-
-        {/* Row 2 */}
-        <div className="">
-          {/* <h2 className="text-2xl font-extrabold">{cityForecast?.cityName}</h2>
-          <h3 className="text-gray-500">{cityForecast?.countryName}</h3> */}
-          <h2 className="text-2xl font-extrabold">{name}</h2>
-          <h3 className="text-gray-500">{countryName}</h3>
-        </div>
-
-        {/* Row 3 */}
-        <div className="flex items-center h-36">
-          {isUserHere ? (
-            <div className="flex items-center space-x-4 font-semibold text-blue-500 my-4 text-xl font-sans">
-              <RiUserLocationLine
-                size={40}
-                className="border-4 border-blue-500 p-1 rounded-full"
+      ) : weather ? (
+        <div
+          key={name}
+          className={`grid grid-rows-7 p-4 rounded border shadow transition transform ease-in-out bg-white font-mono cursor-pointer ${
+            isHome && "!bg-blue-50 hover:bg-blue-200"
+          } ${!isHome && "hover:bg-gray-50"}`}
+        >
+          {/* Row 1 */}
+          <div className="flex justify-center items-center h-28 w-full shadow overflow-hidden rounded-xl mb-4">
+            {(isHome ? isLoadingHomePhoto : isLoadingMainPhoto) ? (
+              <Ring />
+            ) : (
+              <img
+                src={
+                  (isHome ? homePhotoUrl : mainPhotoUrl) ||
+                  "/no-image-placeholder.jpg"
+                }
+                alt={name}
+                className=""
               />
-              <p>
-                You are
-                <br />
-                here now
-              </p>
-            </div>
-          ) : (
-            <div className="text-xl font-semibold">
-              {/* {isFarPlace ? (
+            )}
+          </div>
+
+          {/* Row 2 */}
+          <div className="">
+            <h2 className="text-2xl font-extrabold">{name}</h2>
+            <h3 className="text-gray-500">{countryName}</h3>
+          </div>
+
+          {/* Row 3 */}
+          <div className="flex items-center h-36">
+            {isHome ? (
+              <div className="flex items-center space-x-4 font-semibold text-blue-500 my-4 text-xl font-sans">
+                <RiUserLocationLine
+                  size={40}
+                  className="border-4 border-blue-500 p-1 rounded-full"
+                />
+                <p>
+                  You are
+                  <br />
+                  here now
+                </p>
+              </div>
+            ) : (
+              <div className="text-xl font-semibold">
+                {/* {isFarPlace ? (
                 <div className="bg-yellow-500 p-2 rounded-full flex justify-center items-center font-semibold space-x-2 text-gray-900 mb-3">
                   <BiBadgeCheck />
                   <p>Popular!</p>
@@ -508,94 +398,105 @@ function CityResultVertical({
                   <p>Near you</p>
                 </div>
               )} */}
-              <a
-                href={flightLink}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
-              >
-                <RiPlaneLine size={26} />
-                <p className="text-gray-500 group-hover:text-blue-500">
-                  {flights &&
-                    flights.length > 0 &&
-                    (secondsToDhm((flights[0]?.duration ?? 0) * 60) ?? "N/A")}
-                </p>
-              </a>
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=transit`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
-              >
-                <RiTrainLine size={26} />
-                <p className="text-gray-500 group-hover:text-blue-500">
-                  {travelTime?.travelTimeTransit ?? "N/A"}
-                </p>
-              </a>
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=driving`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
-              >
-                <RiCarLine size={26} />
-                <p className="text-gray-500 group-hover:text-blue-500">
-                  {travelTime?.travelTimeDriving ?? "N/A"}
-                </p>
-              </a>
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className={`flex sm:hidden justify-center items-center text-sm border ${
-            expanded
-              ? "bg-blue-100 text-blue-500 hover:bg-blue-200 transition ease-in-out"
-              : "bg-blue-500 text-white hover:bg-blue-600 transition ease-in-out"
-          } font-bold p-4 rounded-4 rounded`}
-        >
-          {expanded ? (
-            <BsChevronUp className="mr-2" />
-          ) : (
-            <BsChevronDown className="mr-2" />
-          )}
-          {expanded ? "Collapse" : "Expand"}
-          {expanded ? (
-            <BsChevronUp className="ml-2" />
-          ) : (
-            <BsChevronDown className="ml-2" />
-          )}
-        </button>
-
-        {cityForecast?.forecast ? (
-          <div
-            className={`${
-              expanded ? "row-span-1" : "hidden"
-            } sm:row-span-1 sm:flex sm:flex-col`}
-            ref={weatherCellsRef}
-          >
-            {isFutureForecast && cityForecastFuture?.forecastArray ? (
-              cityForecastFuture.forecastArray.map(
-                ({ date, temp_c, temp_max_c, temp_min_c, condition }, i) => (
-                  <WeatherCellNew
-                    key={i}
-                    date={date}
-                    avg={temp_c}
-                    low={temp_min_c}
-                    high={temp_max_c}
-                    text={condition}
-                    isCurrentDay={i == 0 ? true : false}
-                  />
-                )
-              )
-            ) : isFutureForecast && isLoadingFutureForecast ? (
-              <div className="w-full flex justify-center items-center">
-                <Ring />
+                <a
+                  href={flightLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                >
+                  <RiPlaneLine size={26} />
+                  <p className="text-gray-500 group-hover:text-blue-500">
+                    {isLoadingFlights ? (
+                      <div className="w-full text-gray-500">
+                        <Ring size={16} />
+                      </div>
+                    ) : flights && flights.length > 0 ? (
+                      secondsToDhm((flights[0]?.duration ?? 0) * 60) ?? "N/A"
+                    ) : (
+                      <p className="text-gray-500 group-hover:text-blue-500">
+                        No flight routes
+                      </p>
+                    )}
+                  </p>
+                </a>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=transit`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                >
+                  <RiTrainLine size={26} />
+                  {isLoadingTransitTime ? (
+                    <div className="w-full text-gray-500">
+                      <Ring size={16} />
+                    </div>
+                  ) : transitTime ? (
+                    <p className="text-gray-500 group-hover:text-blue-500">
+                      {transitTime}
+                    </p>
+                  ) : null}
+                </a>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=driving`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                >
+                  <RiCarLine size={26} />
+                  {isLoadingDriveTime ? (
+                    <div className="w-full text-gray-500">
+                      <Ring size={16} />
+                    </div>
+                  ) : driveTime ? (
+                    <p className="text-gray-500 group-hover:text-blue-500">
+                      {driveTime}
+                    </p>
+                  ) : null}
+                </a>
               </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`flex sm:hidden justify-center items-center text-sm border ${
+              expanded
+                ? "bg-blue-100 text-blue-500 hover:bg-blue-200 transition ease-in-out"
+                : "bg-blue-500 text-white hover:bg-blue-600 transition ease-in-out"
+            } font-bold p-4 rounded-4 rounded`}
+          >
+            {expanded ? (
+              <BsChevronUp className="mr-2" />
             ) : (
-              cityForecast?.forecast.map(
-                ({ date, temp_c, temp_max_c, temp_min_c, condition }, i) => (
+              <BsChevronDown className="mr-2" />
+            )}
+            {expanded ? "Collapse" : "Expand"}
+            {expanded ? (
+              <BsChevronUp className="ml-2" />
+            ) : (
+              <BsChevronDown className="ml-2" />
+            )}
+          </button>
+
+          {weather ? (
+            <div
+              className={`${
+                expanded ? "row-span-1" : "hidden"
+              } sm:row-span-1 sm:flex sm:flex-col`}
+              ref={weatherCellsRef}
+            >
+              {weather.map(
+                (
+                  {
+                    date,
+                    temp_c,
+                    temp_max_c,
+                    temp_min_c,
+                    condition,
+                    conditionCode,
+                  },
+                  i
+                ) => (
                   <WeatherCellNew
                     key={i}
                     date={date}
@@ -603,12 +504,64 @@ function CityResultVertical({
                     low={temp_min_c}
                     high={temp_max_c}
                     text={condition}
+                    conditionCode={conditionCode}
+                    isCurrentDay={i == 0 ? true : false}
+                  />
+                )
+              )}
+
+              {/* {isFutureForecast && cityForecastFuture?.forecastArray ? (
+              cityForecastFuture.forecastArray.map(
+                (
+                  {
+                    date,
+                    temp_c,
+                    temp_max_c,
+                    temp_min_c,
+                    condition,
+                    conditionCode,
+                  },
+                  i
+                ) => (
+                  <WeatherCellNew
+                    key={i}
+                    date={date}
+                    avg={temp_c}
+                    low={temp_min_c}
+                    high={temp_max_c}
+                    text={condition}
+                    conditionCode={conditionCode}
                     isCurrentDay={i == 0 ? true : false}
                   />
                 )
               )
-            )}
-            {/* {cityForecast
+            ) : (
+              weather.map(
+                (
+                  {
+                    date,
+                    temp_c,
+                    temp_max_c,
+                    temp_min_c,
+                    condition,
+                    conditionCode,
+                  },
+                  i
+                ) => (
+                  <WeatherCellNew
+                    key={i}
+                    date={date}
+                    avg={temp_c}
+                    low={temp_min_c}
+                    high={temp_max_c}
+                    text={condition}
+                    conditionCode={conditionCode}
+                    isCurrentDay={i == 0 ? true : false}
+                  />
+                )
+              )
+            )} */}
+              {/* {cityForecast
                 .slice(0, 6)
                 .map(({ day, date, low, high, text }, i) => (
                   <WeatherCell
@@ -633,7 +586,7 @@ function CityResultVertical({
                       text={text}
                     />
                   ))} */}
-            {/* <button
+              {/* <button
               className="flex justify-center items-center space-x-3 bg-blue-500 rounded-full text-white font-semibold p-2"
               onClick={() => setIsExtended(!isExtended)}
             >
@@ -641,13 +594,13 @@ function CityResultVertical({
               {`${!isExtended ? "Show More" : "Show Less"}`}{" "}
               {!isExtended ? <BiChevronsDown /> : <BiChevronsUp />}
             </button> */}
-          </div>
-        ) : null}
+            </div>
+          ) : null}
 
-        {/* Old Version with openweathermap */}
-        {/* {isLoading ? <Ring /> : <div className="row-span-1">{forecast && forecast.map(({ temp, tempMin, tempMax, feelsLike, humidity, windSpeed, description, icon, timestamp }, i) => <WeatherCell key={i} temp={temp} tempMin={tempMin} tempMax={tempMax} feelsLike={feelsLike} humidity={humidity} windSpeed={windSpeed} description={description} icon={icon} timestamp={timestamp} />)}</div>} */}
+          {/* Old Version with openweathermap */}
+          {/* {isLoading ? <Ring /> : <div className="row-span-1">{forecast && forecast.map(({ temp, tempMin, tempMax, feelsLike, humidity, windSpeed, description, icon, timestamp }, i) => <WeatherCell key={i} temp={temp} tempMin={tempMin} tempMax={tempMax} feelsLike={feelsLike} humidity={humidity} windSpeed={windSpeed} description={description} icon={icon} timestamp={timestamp} />)}</div>} */}
 
-        {/* <button
+          {/* <button
 				onClick={() => {
 					setSelectedCityName(name);
 					setSelectedCountryName(fetchedCountryName);
@@ -661,7 +614,8 @@ function CityResultVertical({
 			>
 				BOOK
 			</button> */}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

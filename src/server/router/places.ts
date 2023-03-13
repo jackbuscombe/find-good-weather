@@ -4,8 +4,13 @@ import axios from "axios";
 import { connectToCluster } from "../db/client";
 import { MongoClient } from "mongodb";
 import { countryCodes } from "../../../public/countryCodes";
-import { GeonameResponse, GeonameResult } from "../../types";
+import {
+  GeonameResponse,
+  GeonameResult,
+  WeatherApiWeatherObject,
+} from "../../types";
 import secondsToDhm from "../../utils/secondsToDhm";
+import isBadWeather from "../../utils/isBadWeather";
 
 export const placesRouter = createRouter()
   .query("getPlaceRapid", {
@@ -183,7 +188,7 @@ export const placesRouter = createRouter()
       }
     },
   })
-  .query("getTravelTimeFromLatLong", {
+  .query("getDriveTimeFromLatLong", {
     input: z.object({
       userLat: z.number(),
       userLong: z.number(),
@@ -195,24 +200,43 @@ export const placesRouter = createRouter()
         const driveTimeQuery = await axios.get(
           `https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${input.destinationLat}%2C${input.destinationLong}&origins=${input.userLat}%2C${input.userLong}&mode=driving&key=${process.env.GOOGLE_MAPS_API}`
         );
-        const travelTimeDriving =
-          secondsToDhm(
-            driveTimeQuery.data.rows[0].elements[0].duration.value
-          ) ?? "N/A";
-        console.log("The newest Drive time is ", travelTimeDriving);
+        const travelTimeDriving = driveTimeQuery.data?.rows[0]?.elements[0]
+          ?.duration?.value
+          ? secondsToDhm(
+              driveTimeQuery.data.rows[0].elements[0].duration.value ||
+                "No driving route"
+            )
+          : "No driving route";
 
+        return travelTimeDriving;
+      } catch (error) {
+        throw new Error("Unable to get drive Time");
+      }
+    },
+  })
+  .query("getTransitTimeFromLatLong", {
+    input: z.object({
+      userLat: z.number(),
+      userLong: z.number(),
+      destinationLat: z.number(),
+      destinationLong: z.number(),
+    }),
+    async resolve({ input }) {
+      try {
         const transitTimeQuery = await axios.get(
           `https://maps.googleapis.com/maps/api/distancematrix/json?destinations=${input.destinationLat}%2C${input.destinationLong}&origins=${input.userLat}%2C${input.userLong}&mode=transit&key=${process.env.GOOGLE_MAPS_API}`
         );
-        const travelTimeTransit =
-          secondsToDhm(
-            transitTimeQuery.data.rows[0].elements[0].duration.value
-          ) ?? "N/A";
-        console.log("The newest Transit time is ", travelTimeTransit);
+        const travelTimeTransit = transitTimeQuery.data?.rows[0]?.elements[0]
+          ?.duration?.value
+          ? secondsToDhm(
+              transitTimeQuery.data.rows[0].elements[0].duration.value ||
+                "No transit route"
+            )
+          : "No transit route";
 
-        return { travelTimeDriving, travelTimeTransit };
+        return travelTimeTransit;
       } catch (error) {
-        throw new Error("Unable to get Travel Time");
+        throw new Error("Unable to get transit Time");
       }
     },
   })
@@ -355,6 +379,7 @@ export const placesRouter = createRouter()
             countryName: "Thailand",
             distance: 999999,
             isFarPlace: true,
+            isHome: false,
           },
           {
             id: "5128581",
@@ -364,6 +389,7 @@ export const placesRouter = createRouter()
             lon: -74.006,
             distance: 999999,
             isFarPlace: true,
+            isHome: false,
           },
           {
             id: "2759794",
@@ -373,6 +399,7 @@ export const placesRouter = createRouter()
             lon: 4.9041,
             distance: 999999,
             isFarPlace: true,
+            isHome: false,
           },
         ];
         // Do a check to make sure we are not giving nearby places
@@ -384,12 +411,45 @@ export const placesRouter = createRouter()
   })
   .query("getWikiMediaImage", {
     input: z.object({
-      wikiDataId: z.string(),
+      geoNamesId: z.string(),
     }),
     async resolve({ input }) {
       try {
+        class SPARQLQueryDispatcher {
+          endpoint: string;
+
+          constructor(endpoint: string) {
+            this.endpoint = endpoint;
+          }
+
+          query(sparqlQuery: string) {
+            const fullUrl =
+              this.endpoint + "?query=" + encodeURIComponent(sparqlQuery);
+            const headers = { Accept: "application/sparql-results+json" };
+
+            return fetch(fullUrl, { headers }).then((body) => body.json());
+          }
+        }
+
+        const endpointUrl = "https://query.wikidata.org/sparql";
+        const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?imageLabel WHERE {
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+          {
+            ?item p:P1566 ?statement0.
+            ?statement0 (ps:P1566) "${input.geoNamesId}".
+            OPTIONAL { ?item wdt:P18 ?image. }
+          }
+        }
+        LIMIT 100`;
+
+        const queryDispatcher = new SPARQLQueryDispatcher(endpointUrl);
+        const queryRes = await queryDispatcher.query(sparqlQuery);
+
+        const wikidata = queryRes.results.bindings[0];
+        const wikiDataId = wikidata.itemLabel.value;
+
         // const wikiEndpoint = "https://simple.wikipedia.org/w/api.php";
-        const wikiEndpoint = `https://www.wikidata.org/w/api.php?action=wbgetclaims&property=P18&entity=${input.wikiDataId}`;
+        const wikiEndpoint = `https://www.wikidata.org/w/api.php?action=wbgetclaims&property=P18&entity=${wikiDataId}`;
         // const wikiParams =
         //   "?action=query" +
         //   "&prop=imageinfo" + // ab 'extract' is the type of property being request
@@ -403,7 +463,7 @@ export const placesRouter = createRouter()
         const wikiParams = {
           action: "wbgetclaims",
           property: "P18",
-          entity: input.wikiDataId,
+          entity: wikiDataId,
           format: "json",
           formatversion: "2",
           origin: "*",
@@ -414,8 +474,6 @@ export const placesRouter = createRouter()
           .then((result) => {
             return result;
           });
-
-        console.log(fileNameRes.request);
 
         const fileName =
           fileNameRes.data.claims.P18[0].mainsnak.datavalue.value;
@@ -439,10 +497,43 @@ export const placesRouter = createRouter()
   })
   .query("getWikiMediaImageOld", {
     input: z.object({
-      wikiDataId: z.string(),
+      geoNamesId: z.string(),
     }),
     async resolve({ input }) {
       try {
+        class SPARQLQueryDispatcher {
+          endpoint: string;
+
+          constructor(endpoint: string) {
+            this.endpoint = endpoint;
+          }
+
+          query(sparqlQuery: string) {
+            const fullUrl =
+              this.endpoint + "?query=" + encodeURIComponent(sparqlQuery);
+            const headers = { Accept: "application/sparql-results+json" };
+
+            return fetch(fullUrl, { headers }).then((body) => body.json());
+          }
+        }
+
+        const endpointUrl = "https://query.wikidata.org/sparql";
+        const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?imageLabel WHERE {
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+          {
+            ?item p:P1566 ?statement0.
+            ?statement0 (ps:P1566) "${input.geoNamesId}".
+            OPTIONAL { ?item wdt:P18 ?image. }
+          }
+        }
+        LIMIT 100`;
+
+        const queryDispatcher = new SPARQLQueryDispatcher(endpointUrl);
+        const queryRes = await queryDispatcher.query(sparqlQuery);
+
+        const wikidata = queryRes.results.bindings[0];
+        const wikiDataId = wikidata.itemLabel.value;
+
         const wikiEndpoint = "https://simple.wikipedia.org/w/api.php";
         // const wikiParams =
         //   "?action=query" +
@@ -459,7 +550,7 @@ export const placesRouter = createRouter()
           prop: "images",
           imlimit: 1,
           // iiprop: "url",
-          titles: input.wikiDataId,
+          titles: wikiDataId,
           format: "json",
           formatversion: "2",
           origin: "*",
@@ -495,7 +586,6 @@ export const placesRouter = createRouter()
         // console.log(imageUrlRes.data);
 
         const imageUrl = imageUrlRes.data.query.pages[-1].imageinfo[0].thumburl;
-        console.log("Image URL: ", imageUrl);
 
         return imageUrl;
       } catch (error) {
@@ -533,7 +623,6 @@ export const placesRouter = createRouter()
         // };
 
         const wikiEndpoint = `https://commons.wikimedia.org/w/api.php?format=json&action=query&list=geosearch&gsprimary=all&gsnamespace=6&gsradius=5000&gscoord=${input.lat}|${input.lon}`;
-        console.log("url: ", wikiEndpoint);
 
         const fileNameRes = await axios
           .get(wikiEndpoint, { timeout: 6500 })
@@ -542,7 +631,6 @@ export const placesRouter = createRouter()
           });
 
         const fileName = fileNameRes.data.query.geosearch[0].title;
-        console.log("Newest File Name: ", fileName);
 
         // Try this too
         // const imageUrlAlternative = await axios.get(`https://commons.wikimedia.org/w/api.php?format=json&action=query&generator=geosearch&ggsprimary=all&ggsnamespace=6&ggsradius=500&ggscoord=51.5|11.95&ggslimit=1&prop=imageinfo&iilimit=1&iiprop=url&iiurlwidth=200&iiurlheight=200`)
@@ -551,19 +639,12 @@ export const placesRouter = createRouter()
 
         // const fileName = fileNameRes.data.claims.P18[0].mainsnak.datavalue.value;
 
-        const imageUrlRes = await axios
-          .get(
-            `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&iiurlwidth=300&titles=${fileName}`,
-            { timeout: 6500 }
-          )
-          .then((result) => {
-            return result;
-          });
-
-        console.log(imageUrlRes.data);
+        const imageUrlRes = await axios.get(
+          `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&iiurlwidth=300&titles=${fileName}`,
+          { timeout: 6500 }
+        );
 
         const imageUrl = imageUrlRes.data.query.pages[-1].imageinfo[0].thumburl;
-        console.log("newest imageurl: ", imageUrl);
 
         return imageUrl;
       } catch (error) {
@@ -613,6 +694,135 @@ export const placesRouter = createRouter()
         const imageUrl = wikidata.imageLabel.value;
 
         return imageUrl;
+        // const wikiSparql = `https://query.wikidata.org/sparql?query=SELECT%20%3Fid%20%3FplaceLabel%20%3FimageLabel%0AWHERE%0A%7B%0A%20%20%3Fplace%20wdt%3AP6482%20%3Fid%20.%0A%20%20%3Fplace%20wdt%3AP1566%20%22${input.geoNamesId}%22%20.%0A%20%20%3Fplace%20wdt%3AP18%20%3Fimage%20.%0A%20%20%0ASERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22%5BAUTO_LANGUAGE%5D%2Cen%22%20%7D%0A%7D`;
+        // console.log("url: ", wikiSparql);
+
+        // const fileNameRes = await axios
+        //   .get(wikiSparql, { timeout: 6500 })
+        //   .then((result) => {
+        //     return result;
+        //   });
+
+        // console.log("SPAQL Response: ", JSON.parse(fileNameRes.data));
+
+        // FINISH HERE
+
+        // const fileName = fileNameRes.data.query.geosearch[0].title;
+        // console.log("Newest File Name: ", fileName);
+
+        // Try this too
+        // const imageUrlAlternative = await axios.get(`https://commons.wikimedia.org/w/api.php?format=json&action=query&generator=geosearch&ggsprimary=all&ggsnamespace=6&ggsradius=500&ggscoord=51.5|11.95&ggslimit=1&prop=imageinfo&iilimit=1&iiprop=url&iiurlwidth=200&iiurlheight=200`)
+        // const fileNameAlt = imageUrlAlternative.data.query.
+        // End try this too
+
+        // const fileName = fileNameRes.data.claims.P18[0].mainsnak.datavalue.value;
+
+        // const imageUrlRes = await axios
+        //   .get(
+        //     `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&iiurlwidth=300&titles=${fileName}`,
+        //     { timeout: 6500 }
+        //   )
+        //   .then((result) => {
+        //     return result;
+        //   });
+
+        // console.log(imageUrlRes.data);
+
+        // const imageUrl = imageUrlRes.data.query.pages[-1].imageinfo[0].thumburl;
+        // console.log("newest imageurl: ", imageUrl);
+
+        // return imageUrl;
+      } catch (error) {
+        // console.log("Error fetching Wiki Image: ", error);
+      }
+    },
+  })
+  .query("getWikiMediaModalImagesFromGeonamesId", {
+    input: z.object({
+      geoNamesId: z.number(),
+    }),
+    async resolve({ input }) {
+      try {
+        class SPARQLQueryDispatcher {
+          endpoint: string;
+
+          constructor(endpoint: string) {
+            this.endpoint = endpoint;
+          }
+
+          query(sparqlQuery: string) {
+            const fullUrl =
+              this.endpoint + "?query=" + encodeURIComponent(sparqlQuery);
+            const headers = { Accept: "application/sparql-results+json" };
+
+            return fetch(fullUrl, { headers }).then((body) => body.json());
+          }
+        }
+
+        const endpointUrl = "https://query.wikidata.org/sparql";
+        const sparqlQuery = `SELECT DISTINCT ?item ?itemLabel ?imageLabel WHERE {
+          SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE]". }
+          {
+            ?item p:P1566 ?statement0.
+            ?statement0 (ps:P1566) "${input.geoNamesId}".
+            OPTIONAL { ?item wdt:P18 ?image. }
+          }
+        }
+        LIMIT 100`;
+
+        const queryDispatcher = new SPARQLQueryDispatcher(endpointUrl);
+        const queryRes = await queryDispatcher.query(sparqlQuery);
+
+        const wikidata = queryRes.results.bindings[0];
+
+        const wikidataId = wikidata.itemLabel.value;
+
+        const wikiEndpoint = `https://www.wikidata.org/w/api.php?action=wbgetclaims&property=P18&entity=${wikidataId}`;
+
+        const wikiParams = {
+          action: "wbgetclaims",
+          property: "P18",
+          entity: wikidataId,
+          format: "json",
+          formatversion: "2",
+          origin: "*",
+        };
+
+        const fileNameRes = await axios.get(wikiEndpoint, {
+          params: wikiParams,
+          timeout: 6500,
+        });
+
+        const filenamesArray: string[] = [];
+
+        for (let i = 0; i < fileNameRes.data.claims.P18.length; i++) {
+          filenamesArray.push(
+            fileNameRes.data.claims.P18[i].mainsnak.datavalue.value
+          );
+        }
+
+        const imageUrlArray: string[] = [];
+
+        for (let i = 0; i < filenamesArray.length; i++) {
+          const imageUrlRes = await axios.get(
+            `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&iiurlwidth=300&titles=File:${filenamesArray[i]}`,
+            { timeout: 6500 }
+          );
+
+          const imageUrl: string =
+            imageUrlRes.data?.query?.pages?.[-1]?.imageinfo?.[0]?.thumburl ??
+            "";
+
+          console.log("Image URL: ", imageUrl);
+
+          imageUrlArray.push(imageUrl);
+          console.log("tempImageUrlArray ", imageUrlArray);
+        }
+
+        console.log("imageUrlArray", imageUrlArray);
+
+        return imageUrlArray;
+
         // const wikiSparql = `https://query.wikidata.org/sparql?query=SELECT%20%3Fid%20%3FplaceLabel%20%3FimageLabel%0AWHERE%0A%7B%0A%20%20%3Fplace%20wdt%3AP6482%20%3Fid%20.%0A%20%20%3Fplace%20wdt%3AP1566%20%22${input.geoNamesId}%22%20.%0A%20%20%3Fplace%20wdt%3AP18%20%3Fimage%20.%0A%20%20%0ASERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22%5BAUTO_LANGUAGE%5D%2Cen%22%20%7D%0A%7D`;
         // console.log("url: ", wikiSparql);
 
@@ -719,8 +929,10 @@ export const placesRouter = createRouter()
             lon: response[i]?.location.coordinates[0] ?? 0,
             distance: 100,
             isFarPlace: false,
+            isHome: false,
           });
         }
+
         return result;
       } catch (error) {
         console.log(error);

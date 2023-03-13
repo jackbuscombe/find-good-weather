@@ -21,6 +21,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import SortBySelect from "../components/UIComponents/SortBySelect";
 import CityResult from "../components/CityResult";
 import LocationModal from "../components/LocationModal";
+import { GeonameResult, WeatherApiWeatherObject } from "../types";
 
 const Home: NextPage = () => {
   const isViewingHome = useStore((state) => state.isViewingHome);
@@ -60,16 +61,18 @@ const Home: NextPage = () => {
   const datepickerWrapperRef = useRef(null);
   useOutsideAlerter(datepickerWrapperRef);
   const [pageNumber, setPageNumber] = useState(0);
+  const [tableResultsWithGoodWeather, setTableResultsWithGoodWeather] =
+    useState<GeonameResult[]>([]);
 
-  const { data: userLocationObject, isLoading: isLoadingUserLocation } =
-    trpc.useQuery(
-      ["places.getCityFromLatLong", { lat: userLat, long: userLong }],
-      {
-        enabled: !!userLat && !!userLong,
-        staleTime: Infinity,
-        cacheTime: Infinity,
-      }
-    );
+  // const { data: userLocationObject, isLoading: isLoadingUserLocation } =
+  //   trpc.useQuery(
+  //     ["places.getCityFromLatLong", { lat: userLat, long: userLong }],
+  //     {
+  //       enabled: !!userLat && !!userLong,
+  //       staleTime: Infinity,
+  //       cacheTime: Infinity,
+  //     }
+  //   );
 
   // const {
   //   data: nearbyCities,
@@ -100,13 +103,15 @@ const Home: NextPage = () => {
       enabled: !!searchedCityLat && !!searchedCityLong,
       staleTime: Infinity,
       cacheTime: Infinity,
+      onSuccess: (cities) => {
+        setTableResultsWithGoodWeather([
+          userCityObject,
+          ...tableResultsWithGoodWeather,
+          ...cities,
+        ]);
+      },
     }
   );
-
-  useEffect(() => {
-    if (!nearbyCities) return;
-    console.log("MONGO NEARBY ", nearbyCities);
-  }, [nearbyCities]);
 
   const { data: farPlaces } = trpc.useQuery(["places.getFarPlaces"], {
     staleTime: Infinity,
@@ -144,13 +149,13 @@ const Home: NextPage = () => {
     setPageNumber(0);
   }, [nearbyCities]);
 
-  useMemo(() => {
-    if (!userLocationObject) return;
-    setUserPlaceId(userLocationObject.placeId);
-    setUserCity(userLocationObject.cityName);
-    setUserCountry(userLocationObject.countryName);
-    setUserFullLocationName(userLocationObject.fullLocationName);
-  }, [userLocationObject]);
+  // useMemo(() => {
+  //   if (!userLocationObject) return;
+  //   setUserPlaceId(userLocationObject.placeId);
+  //   setUserCity(userLocationObject.cityName);
+  //   setUserCountry(userLocationObject.countryName);
+  //   setUserFullLocationName(userLocationObject.fullLocationName);
+  // }, [userLocationObject]);
 
   // Google Maps and autocomplete necessities
   const [libraries] = useState<
@@ -165,6 +170,17 @@ const Home: NextPage = () => {
     startDate: startDate,
     endDate: endDate,
     key: "selection",
+  };
+
+  const userCityObject: GeonameResult = {
+    id: "0",
+    name: userCity,
+    countryName: userCountry,
+    isFarPlace: false,
+    distance: 0,
+    lat: userLat,
+    lon: userLong,
+    isHome: true,
   };
 
   const resetInput = () => {
@@ -225,9 +241,9 @@ const Home: NextPage = () => {
 
   const sortedTableDataMemoized = useMemo(() => {
     if (!nearbyCities || !farPlaces) return;
-    return nearbyCities
-      .concat(farPlaces)
-      .sort((a, b) => a.distance - b.distance);
+    return [userCityObject, ...nearbyCities, ...farPlaces].sort(
+      (a, b) => a.distance - b.distance
+    );
   }, [nearbyCities]);
 
   // Animations
@@ -241,6 +257,18 @@ const Home: NextPage = () => {
   useEffect(() => {
     resultsListRef.current && autoAnimate(resultsListRef.current);
   }, [tableRef]);
+
+  const addCity = <T,>(id: string) => {
+    setTableResultsWithGoodWeather((current) =>
+      current.filter((object) => object.id !== id)
+    );
+  };
+
+  const removeCity = <T,>(id: string) => {
+    setTableResultsWithGoodWeather((current) =>
+      current.filter((object) => object.id !== id)
+    );
+  };
 
   return (
     <>
@@ -295,39 +323,37 @@ const Home: NextPage = () => {
                 className="grid grid-cols-1 grid-rows-1 overflow-hidden sm:grid-cols-3 lg:grid-cols-5 gap-2"
                 ref={resultsListRef}
               >
-                {sortedTableDataMemoized &&
-                  sortedTableDataMemoized
-                    .slice(pageNumber, pageNumber + 5)
-                    .map(
-                      (
-                        {
-                          id,
-                          name,
-                          countryName,
-                          lat,
-                          lon,
-                          distance,
-                          isFarPlace,
-                        },
-                        i
-                      ) => (
-                        <CityResult
-                          key={id}
-                          id={id}
-                          name={name}
-                          countryName={countryName}
-                          lat={lat}
-                          lon={lon}
-                          distance={distance}
-                          isUserHere={
-                            i == 0 && pageNumber == 0 && isViewingHome
-                              ? true
-                              : false
-                          }
-                          isFarPlace={isFarPlace}
-                        />
-                      )
-                    )}
+                {tableResultsWithGoodWeather
+                  .slice(pageNumber, pageNumber + 5)
+                  .map(
+                    (
+                      {
+                        id,
+                        name,
+                        countryName,
+                        lat,
+                        lon,
+                        distance,
+                        isFarPlace,
+                        isHome,
+                      },
+                      i
+                    ) => (
+                      <CityResult
+                        key={id}
+                        id={id}
+                        name={name}
+                        countryName={countryName}
+                        lat={lat}
+                        lon={lon}
+                        distance={distance}
+                        isHome={isHome}
+                        isFarPlace={isFarPlace}
+                        addCity={addCity}
+                        removeCity={removeCity}
+                      />
+                    )
+                  )}
               </div>
             </div>
           </div>
