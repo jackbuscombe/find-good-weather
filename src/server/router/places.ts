@@ -813,13 +813,8 @@ export const placesRouter = createRouter()
             imageUrlRes.data?.query?.pages?.[-1]?.imageinfo?.[0]?.thumburl ??
             "";
 
-          console.log("Image URL: ", imageUrl);
-
           imageUrlArray.push(imageUrl);
-          console.log("tempImageUrlArray ", imageUrlArray);
         }
-
-        console.log("imageUrlArray", imageUrlArray);
 
         return imageUrlArray;
 

@@ -179,8 +179,8 @@ export default function LocationModal() {
                       loop
                       align="start"
                     >
-                      {imagesArray?.map((image) => (
-                        <Carousel.Slide>
+                      {imagesArray?.map((image, i) => (
+                        <Carousel.Slide key={i}>
                           <img
                             src={image}
                             className="h-full w-full object-cover"
