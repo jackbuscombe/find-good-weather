@@ -50,7 +50,7 @@ function WeatherCell({
                 : "bg-gray-50 hover:bg-gray-100"
             } shadow rounded p-2 my-2 cursor-pointer font-mono`}
           >
-            <div className="w-full flex justify-center items-center space-x-4 text-center">
+            <div className="w-full flex flex-col sm:flex-row justify-center items-center md:space-x-4 text-center">
               <img
                 src={
                   isCurrentDay
@@ -86,7 +86,7 @@ function WeatherCell({
               />
               <div className="flex flex-col items-center">
                 <p
-                  className={`text-xl font-bold leading-5 ${
+                  className={`text-sm lg:text-xl font-bold leading-5 ${
                     isCurrentDay ? "text-blue-500" : "text-black"
                   }`}
                 >{`${
@@ -94,7 +94,7 @@ function WeatherCell({
                     ? `${avg.toFixed(0)}°C`
                     : `${celsiusToFahrenheit(avg).toFixed(0)}°F`
                 }`}</p>
-                <p className="text-gray-500 text-sm">
+                <p className="text-xs lg:text-sm text-gray-500">
                   {`${format(new Date(date * 1000), "dd EEE").toUpperCase()}`}
                 </p>
               </div>

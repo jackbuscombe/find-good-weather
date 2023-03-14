@@ -48,6 +48,7 @@ const Home: NextPage = () => {
   const isLocationModalOpen = useStore((state) => state.isLocationModalOpen);
   const setIsViewingHome = useStore((state) => state.setIsViewingHome);
   const viewType = useStore((state) => state.viewType);
+  const maxDistanceKms = useStore((state) => state.maxDistanceKms);
   const [isDatepickerOpen, setIsDatepickerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [directionsResponse, setDirectionsResponse] =
@@ -97,10 +98,10 @@ const Home: NextPage = () => {
   } = trpc.useQuery(
     [
       "places.getNearbyPlacesMongo",
-      { lat: searchedCityLat, lon: searchedCityLong },
+      { lat: searchedCityLat, lon: searchedCityLong, maxDistanceKms },
     ],
     {
-      enabled: !!searchedCityLat && !!searchedCityLong,
+      enabled: !!searchedCityLat && !!searchedCityLong && !!maxDistanceKms,
       staleTime: Infinity,
       cacheTime: Infinity,
       onSuccess: (cities) => {
@@ -283,7 +284,7 @@ const Home: NextPage = () => {
         <div ref={searchFormRef}>{isLoaded && <SearchFormCallback />}</div>
 
         {nearbyCities && farPlaces && (
-          <div className="w-5/6 xl:w-3/4 flex flex-col md:flex-row justify-between items-center mt-3 font-mono space-x-6 text-lg my-4">
+          <div className="w-11/12 xl:w-3/4 flex flex-col md:flex-row justify-between items-center mt-3 font-mono space-x-6 text-lg my-4">
             <div className="hidden md:flex items-center">
               <p className="text-gray-500 mr-3">Searching Results: </p>
               <span className="text-black dark:text-white font-bold">
@@ -299,28 +300,30 @@ const Home: NextPage = () => {
 
         <div className="w-full flex justify-center" ref={changePageButtonsRef}>
           {nearbyCities && farPlaces && (
-            <div className="w-5/6 xl:w-3/4 space-x-2 flex justify-center items-center mt-4">
+            <div className="w-11/12 xl:w-3/4 space-x-2 flex justify-center items-center mt-4">
               <PageChangeButton
                 isNextPage={false}
                 pageNumber={pageNumber}
                 setPageNumber={setPageNumber}
                 key="previous_button"
+                maxPageNumber={tableResultsWithGoodWeather.length}
               />
               <PageChangeButton
                 isNextPage={true}
                 pageNumber={pageNumber}
                 setPageNumber={setPageNumber}
                 key="next_button"
+                maxPageNumber={tableResultsWithGoodWeather.length}
               />
             </div>
           )}
         </div>
 
         {isLoaded && nearbyCities && farPlaces && viewType === "vertical" ? (
-          <div className="w-5/6 xl:w-3/4">
+          <div className="w-11/12 xl:w-3/4">
             <div ref={tableRef}>
               <div
-                className="grid grid-cols-1 grid-rows-1 overflow-hidden sm:grid-cols-3 lg:grid-cols-5 gap-2"
+                className="grid grid-cols-1 grid-rows-1 overflow-hidden lg:grid-cols-5 gap-2"
                 ref={resultsListRef}
               >
                 {tableResultsWithGoodWeather

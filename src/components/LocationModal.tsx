@@ -1,6 +1,6 @@
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
-import { Dialog, Tab, Transition } from "@headlessui/react";
+import { Dialog, Popover, Tab, Transition } from "@headlessui/react";
 import { Carousel } from "@mantine/carousel";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
@@ -25,7 +25,7 @@ import { AiOutlineCalendar } from "react-icons/ai";
 import { add, format } from "date-fns";
 import { BiChevronDown, BiUser } from "react-icons/bi";
 import SearchFieldPeople from "./SearchFields/SearchFieldPeople";
-import { DateRangePicker } from "react-date-range";
+import { DateRange, DateRangePicker } from "react-date-range";
 import FlightsList from "./ModalComponents/FlightsList";
 import TrainsList from "./ModalComponents/TrainsList";
 
@@ -215,65 +215,75 @@ export default function LocationModal() {
                     </Carousel.Slide> */}
                   <div className="w-full p-6 bg-white">
                     {/* Row 1 */}
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <Dialog.Title
-                          as="h3"
-                          className="text-3xl text-gray-900 font-extrabold"
-                        >
-                          {selectedCityName}
-                        </Dialog.Title>
-                        <div className="mt-2">
-                          <p className="text-gray-500">{selectedCountryName}</p>
+                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center">
+                      <div className="flex justify-between">
+                        <div>
+                          <Dialog.Title
+                            as="h3"
+                            className="text-3xl text-gray-900 font-extrabold"
+                          >
+                            {selectedCityName}
+                          </Dialog.Title>
+                          <div className="mt-2">
+                            <p className="text-gray-500">
+                              {selectedCountryName}
+                            </p>
+                          </div>
                         </div>
+                        <button
+                          onClick={() => setIsLocationModalOpen(false)}
+                          className={`lg:hidden h-12 text-gray-500 bg-gray-100 hover:bg-gray-200 text-lg p-4 cursor-pointer`}
+                        >
+                          <RiCloseLine />
+                        </button>
                       </div>
                       {/* Transport and Close Button */}
-                      <div className="flex space-x-6 text-xl">
-                        <div className="flex items-center space-x-2 hover:text-blue-500 group hover:underline">
+                      <div className="flex justify-between lg:space-x-6 text-xl my-4 lg:my-0">
+                        <div className="w-full flex flex-col lg:flex-row justify-center lg:justify-start items-center text-center lg:space-x-4 py-2 hover:text-blue-500 group hover:underline space-y-2 lg:space-y-0">
                           <RiPlaneLine />
                           <a
                             href={selectedCityFlightLink}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-gray-500 group-hover:text-blue-500 outline-none"
+                            className="text-gray-500 group-hover:text-blue-500 outline-none lg:whitespace-nowrap"
                           >
                             {selectedCityFlightTime}
                           </a>
                         </div>
-                        <div className="flex items-center space-x-2 hover:text-blue-500 group hover:underline">
+                        <div className="w-full flex flex-col lg:flex-row justify-center lg:justify-start items-center text-center lg:space-x-4 py-2 hover:text-blue-500 group hover:underline space-y-2 lg:space-y-0">
                           <RiTrainLine />
                           <a
                             href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${selectedCityLat},${selectedCityLong}&travelmode=transit`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-gray-500 group-hover:text-blue-500 outline-none"
+                            className="text-gray-500 group-hover:text-blue-500 outline-none lg:whitespace-nowrap"
                           >
                             {selectedCityTransitTime}
                           </a>
                         </div>
-                        <div className="flex items-center space-x-2 hover:text-blue-500 group hover:underline">
+                        <div className="w-full flex flex-col lg:flex-row justify-center lg:justify-start items-center text-center lg:space-x-4 py-2 hover:text-blue-500 group hover:underline space-y-2 lg:space-y-0">
                           <RiCarLine />
                           <a
                             href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${selectedCityLat},${selectedCityLong}&travelmode=driving`}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-gray-500 group-hover:text-blue-500 outline-none"
+                            className="text-gray-500 group-hover:text-blue-500 outline-none lg:whitespace-nowrap"
                           >
                             {selectedCityDriveTime}
                           </a>
                         </div>
-                        <div
+                        <button
                           onClick={() => setIsLocationModalOpen(false)}
-                          className={`text-gray-500 bg-gray-100 hover:bg-gray-200 text-lg p-4 cursor-pointer`}
+                          className={`hidden lg:flex text-gray-500 bg-gray-100 hover:bg-gray-200 text-lg p-4 cursor-pointer`}
                         >
                           <RiCloseLine />
-                        </div>
+                        </button>
                       </div>
                     </div>
 
                     {/* Row 2 */}
                     <div
-                      className="flex space-x-4 my-5"
+                      className="w-full flex my-5"
                       ref={datepickerWrapperRef}
                     >
                       <SearchFormField
@@ -282,57 +292,64 @@ export default function LocationModal() {
                           <AiOutlineCalendar className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />
                         }
                       >
-                        <>
-                          <div
-                            className="flex justify-between items-center font-mono"
-                            onClick={() => setIsDatepickerOpen(true)}
+                        <Popover>
+                          <Popover.Button>
+                            <div className="flex items-center font-mono outline-none border-none">
+                              <input
+                                placeholder={`${format(
+                                  startDate,
+                                  "dd MMM yy"
+                                )} - ${format(endDate, "dd MMM yy")}`}
+                                className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer"
+                                type="text"
+                              />
+                              <BiChevronDown
+                                className="h-5 w-5 text-gray-400 ml-2"
+                                aria-hidden="true"
+                              />
+                            </div>
+                          </Popover.Button>
+                          <Transition
+                            as={Fragment}
+                            enter="transition ease-out duration-200"
+                            enterFrom="opacity-0 translate-y-1"
+                            enterTo="opacity-100 translate-y-0"
+                            leave="transition ease-in duration-150"
+                            leaveFrom="opacity-100 translate-y-0"
+                            leaveTo="opacity-0 translate-y-1"
                           >
-                            <input
-                              placeholder={`${format(
-                                startDate,
-                                "dd MMM yy"
-                              )} - ${format(endDate, "dd MMM yy")}`}
-                              className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer"
-                              type="text"
-                            />
-                            <BiChevronDown
-                              className="h-5 w-5 text-gray-400 ml-2"
-                              aria-hidden="true"
-                            />
-                          </div>
-                          {isDatepickerOpen && (
-                            <div className="absolute bg-white font-sans mx-auto mt-2 z-40 overflow-y-scroll -bottom-10">
-                              <DateRangePicker
+                            <Popover.Panel className="fixed top-0 left-0 sm:absolute sm:top-auto sm:left-auto z-50 bg-white border rounded shadow-black shadow-2xl">
+                              <DateRange
                                 ranges={[selectionRange]}
                                 minDate={new Date()}
                                 rangeColors={["#253adc"]}
+                                maxDate={add(new Date(), { days: 300 })}
+                                months={10}
+                                direction="vertical"
                                 onChange={handleSelect}
+                                className="h-72 overflow-y-scroll"
                                 moveRangeOnFirstSelection={true}
                                 retainEndDateOnFirstSelection={true}
                               />
-                              <div className="flex space-x-3 justify-center py-3">
-                                <button
-                                  onClick={() => setIsDatepickerOpen(false)}
-                                  className="bg-transparent border text-gray-500 font-semibold p-3 rounded hover:bg-gray-50"
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={() => setIsDatepickerOpen(false)}
-                                  className="bg-blue-500 text-white font-semibold p-3 rounded"
-                                >
-                                  Done
-                                </button>
+                              <div className="flex justify-center py-3 border-t">
+                                <Popover.Overlay>
+                                  <button
+                                    id="close_date_popover"
+                                    className="bg-blue-500 text-white font-semibold p-3 rounded"
+                                  >
+                                    Done
+                                  </button>
+                                </Popover.Overlay>
                               </div>
-                            </div>
-                          )}
-                        </>
+                            </Popover.Panel>
+                          </Transition>
+                        </Popover>
                       </SearchFormField>
                     </div>
 
                     {/* Row 3 - Weather */}
                     <div className="flex w-full justify-center space-x-4">
-                      <div className="flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
+                      <div className="hidden lg:flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
                         <FiChevronLeft />
                       </div>
                       {selectedCityWeatherData
@@ -361,7 +378,7 @@ export default function LocationModal() {
                             />
                           )
                         )}
-                      <div className="flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
+                      <div className="hidden lg:flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
                         <FiChevronRight />
                       </div>
                     </div>
@@ -378,7 +395,7 @@ export default function LocationModal() {
                           <Tab
                             key={category}
                             className={({ selected }) =>
-                              `w-full rounded-lg py-2.5 text-lg font-extrabold leading-5 transition focus:outline-none ${
+                              `w-full rounded-lg py-2.5 text-sm lg:text-lg font-extrabold leading-5 transition focus:outline-none ${
                                 selected
                                   ? "bg-blue-100 text-blue-500 hover:bg-blue-200 shadow"
                                   : "bg-white text-gray-600 hover:bg-gray-200"

@@ -34,13 +34,11 @@ type Props = {
 };
 
 function SearchForm({ className, refetch }: Props) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const userLat = useStore((state) => state.userLat);
   const userLong = useStore((state) => state.userLong);
   const userCity = useStore((state) => state.userCity);
   const viewType = useStore((state) => state.viewType);
   const setViewType = useStore((state) => state.setViewType);
-  const [isDatepickerOpen, setIsDatepickerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [directionsResponse, setDirectionsResponse] =
     useState<google.maps.DirectionsResult>();
@@ -84,9 +82,6 @@ function SearchForm({ className, refetch }: Props) {
     (state) => state.setSelectedLocationId
   );
 
-  useOutsideAlerter(datepickerWrapperRef, "datepicker");
-  useOutsideAlerter(settingsWrapperRef, "settings");
-
   const [libraries] = useState<
     ("places" | "drawing" | "geometry" | "localContext" | "visualization")[]
   >(["places"]);
@@ -109,31 +104,6 @@ function SearchForm({ className, refetch }: Props) {
   const resetInput = () => {
     setSearchInput("");
   };
-
-  function useOutsideAlerter(ref: any, element: string) {
-    useEffect(() => {
-      function handleClickOutside(event: any) {
-        if (
-          ref.current &&
-          !ref.current.contains(event.target) &&
-          element == "datepicker"
-        ) {
-          setIsDatepickerOpen(false);
-        }
-        if (
-          ref.current &&
-          !ref.curent?.contains(event.target) &&
-          element == "settings"
-        ) {
-          setIsSettingsOpen(false);
-        }
-      }
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [ref]);
-  }
 
   const onLoad = (autoC: google.maps.places.Autocomplete) =>
     setAutocomplete(autoC);
@@ -211,14 +181,14 @@ function SearchForm({ className, refetch }: Props) {
 					<SearchFieldDesiredWeather options={["clear", "rainy", "snow"]} />
 				</SearchFormField> */}
 
-        <div ref={datepickerWrapperRef}>
+        <div>
           <SearchFormField
             title="When"
             icon={
               <AiOutlineCalendar className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />
             }
           >
-            <Popover>
+            <Popover className={`z-50`}>
               <Popover.Button>
                 <div className="flex items-center font-mono outline-none border-none">
                   <input
@@ -244,7 +214,7 @@ function SearchForm({ className, refetch }: Props) {
                 leaveFrom="opacity-100 translate-y-0"
                 leaveTo="opacity-0 translate-y-1"
               >
-                <Popover.Panel className="fixed top-0 left-0 sm:absolute sm:top-auto sm:left-auto z-20 bg-white border rounded shadow-black shadow-2xl">
+                <Popover.Panel className="fixed top-0 left-0 sm:absolute sm:top-auto sm:left-auto bg-white border rounded shadow-black shadow-2xl">
                   <DateRange
                     ranges={[selectionRange]}
                     minDate={new Date()}
@@ -274,8 +244,30 @@ function SearchForm({ className, refetch }: Props) {
           </SearchFormField>
         </div>
 
+        <Popover className="relative flex items-center">
+          {({ open }) => (
+            <>
+              <Popover.Button>
+                <div
+                  className={`text-gray-500 ${
+                    open
+                      ? "bg-yellow-400 hover:bg-yellow-500 text-white"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  } text-2xl p-4 cursor-pointer`}
+                >
+                  {open ? <RiCloseLine /> : <RiSettingsLine />}
+                </div>
+              </Popover.Button>
+
+              <Popover.Panel className="absolute z-10">
+                <SettingsDropdown />
+              </Popover.Panel>
+            </>
+          )}
+        </Popover>
+
         <Tooltip
-          label="Our algorithm draws nearby cities with a population over 90,000"
+          label="Algorithm draws nearby cities with a population over 100,000"
           withArrow
         >
           <div
@@ -283,14 +275,7 @@ function SearchForm({ className, refetch }: Props) {
           >
             <p>i</p>
           </div>
-          {/* <div onClick={() => setIsSettingsOpen(!isSettingsOpen)} className={`text-gray-500 ${isSettingsOpen ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-100 hover:bg-gray-200"} text-2xl p-4 cursor-pointer`}>
-						{isSettingsOpen ? <RiCloseLine /> : <RiSettingsLine />}
-					</div> */}
         </Tooltip>
-      </div>
-
-      <div ref={settingsWrapperRef} className="relative">
-        {isSettingsOpen && <SettingsDropdown />}
       </div>
     </div>
   );

@@ -865,6 +865,7 @@ export const placesRouter = createRouter()
     input: z.object({
       lat: z.number(),
       lon: z.number(),
+      maxDistanceKms: z.number(),
     }),
     async resolve({ input }) {
       try {
@@ -873,6 +874,9 @@ export const placesRouter = createRouter()
         //   process.env.MONGODB_URL as string
         // );
         // const client = await mongo?.connect();
+        if (input.maxDistanceKms < 0 || input.maxDistanceKms > 100000) {
+          throw new Error("Above max distance");
+        }
 
         const client = await connectToCluster();
 
@@ -897,7 +901,7 @@ export const placesRouter = createRouter()
                 coordinates: [input.lon, input.lat],
               },
               minDistance: 100 * 1000,
-              maxDistance: 50000 * 1000,
+              maxDistance: (input.maxDistanceKms ?? 5000) * 1000,
               key: "location",
               spherical: true,
               distanceField: "distance",

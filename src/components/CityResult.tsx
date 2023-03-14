@@ -75,7 +75,6 @@ function CityResultVertical({
   const [attractionsCount, setAttractionsCount] = useState("");
   const [neighborhoodCount, setNeighborhoodCount] = useState("");
   const [restaurantCount, setRestaurantCount] = useState("");
-  const [expanded, setExpanded] = useState(false);
   const [forecast, setForecast] = useState<WeatherObject[]>();
   const setSelectedCityGeonameId = useStore(
     (state) => state.setSelectedCityGeonameId
@@ -139,36 +138,6 @@ function CityResultVertical({
   const [isFutureForecast, setIsFutureForecast] = useState(false);
   const [futureDates, setFutureDates] = useState<Date[]>([]);
 
-  useMemo(() => {
-    if (startDate > add(new Date(), { days: 13 })) {
-      setIsFutureForecast(true);
-    }
-    if (startDate < add(new Date(), { days: 14 })) {
-      setIsFutureForecast(false);
-    }
-  }, [startDate]);
-
-  const { data: homePhotoUrl, isLoading: isLoadingHomePhoto } = trpc.useQuery(
-    [
-      "places.getWikiMediaImageNewest",
-      { lat: lat.toString(), lon: lon.toString() },
-    ],
-    {
-      enabled: !!lat && !!lon && isHome,
-      staleTime: Infinity,
-      cacheTime: Infinity,
-    }
-  );
-
-  const { data: mainPhotoUrl, isLoading: isLoadingMainPhoto } = trpc.useQuery(
-    ["places.getWikiMediaFromGeonamesId", { geoNamesId: parseInt(id) }],
-    {
-      enabled: !!id && !isHome,
-      staleTime: Infinity,
-      cacheTime: Infinity,
-    }
-  );
-
   const { data: weather, isLoading: isLoadingWeather } = trpc.useQuery(
     ["forecast.getWeatherApiForecastByLatLong", { lat, lon, days: 10, isHome }],
     {
@@ -202,6 +171,36 @@ function CityResultVertical({
   //     }
   //   );
 
+  useMemo(() => {
+    if (startDate > add(new Date(), { days: 13 })) {
+      setIsFutureForecast(true);
+    }
+    if (startDate < add(new Date(), { days: 14 })) {
+      setIsFutureForecast(false);
+    }
+  }, [startDate]);
+
+  const { data: homePhotoUrl, isLoading: isLoadingHomePhoto } = trpc.useQuery(
+    [
+      "places.getWikiMediaImageNewest",
+      { lat: lat.toString(), lon: lon.toString() },
+    ],
+    {
+      enabled: !!lat && !!lon && !!weather && isHome,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+    }
+  );
+
+  const { data: mainPhotoUrl, isLoading: isLoadingMainPhoto } = trpc.useQuery(
+    ["places.getWikiMediaFromGeonamesId", { geoNamesId: parseInt(id) }],
+    {
+      enabled: !!id && !!weather && !isHome,
+      staleTime: Infinity,
+      cacheTime: Infinity,
+    }
+  );
+
   const { data: airportIata } = trpc.useQuery(
     [
       "flights.getIataCode",
@@ -211,7 +210,7 @@ function CityResultVertical({
       },
     ],
     {
-      enabled: !!lon && !!lat,
+      enabled: !!lon && !!lat && !!weather,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
@@ -244,7 +243,7 @@ function CityResultVertical({
       },
     ],
     {
-      enabled: !!userLat && !!userLong && !!lat && !!lon,
+      enabled: !!userLat && !!userLong && !!lat && !!lon && !!weather,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
@@ -261,7 +260,7 @@ function CityResultVertical({
       },
     ],
     {
-      enabled: !!userLat && !!userLong && !!lat && !!lon,
+      enabled: !!userLat && !!userLong && !!lat && !!lon && !!weather,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
@@ -281,27 +280,15 @@ function CityResultVertical({
     ],
     {
       enabled:
-        !!currentAirportIata && !!airportIata && !!userCurrency && !!startDate,
+        !!currentAirportIata &&
+        !!airportIata &&
+        !!userCurrency &&
+        !!startDate &&
+        !!weather,
       staleTime: Infinity,
       cacheTime: Infinity,
     }
   );
-
-  // useEffect(() => {
-  //   if (!travelTime) return;
-  //   console.log("Travel time", travelTime);
-  //   if (travelTime?.rows?.[0]?.elements?.[0]?.status != "ZERO_RESULTS") {
-  //     setFlightTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
-  //     setTransportTime(travelTime?.rows[0]?.elements?.[0]?.duration?.text);
-  //     setDriveTime(travelTime?.rows?.[0]?.elements?.[0]?.duration?.text);
-  //     setDistanceFromUser(travelTime?.rows?.[0]?.elements?.[0]?.distance?.text);
-  //   }
-  // }, [travelTime]);
-
-  // useEffect(() => {
-  //   if (!locationDetails) return;
-  //   setFetchedCountryName(locationDetails);
-  // }, [locationDetails]);
 
   //   Animations
   const resultRef = useRef(null);
@@ -339,18 +326,25 @@ function CityResultVertical({
       ref={resultRef}
     >
       {isLoadingWeather ? (
-        <div className="flex justify-center mt-8 text-white">
+        <div className="flex flex-col items-center mt-8 text-white space-y-4">
           <Ring color="white" />
+          <p className="flex flex-col items-center">
+            Checking weather in
+            <br />
+            <span className="font-bold text-yellow-500">
+              {name}, {countryName}
+            </span>
+          </p>
         </div>
       ) : weather ? (
         <div
           key={name}
-          className={`grid grid-rows-7 p-4 rounded border shadow transition transform ease-in-out bg-white font-mono cursor-pointer ${
+          className={`grid grid-rows-7 grid-cols-2 p-4 rounded border shadow transition transform ease-in-out bg-white font-mono cursor-pointer ${
             isHome && "!bg-blue-50 hover:bg-blue-200"
           } ${!isHome && "hover:bg-gray-50"}`}
         >
           {/* Row 1 */}
-          <div className="flex justify-center items-center h-28 w-full shadow overflow-hidden rounded-xl mb-4">
+          <div className="flex col-span-2 sm:col-span-1 lg:col-span-2 justify-center items-center h-28 w-full shadow overflow-hidden rounded-xl lg:mb-4 order-2 lg:order-1">
             {(isHome ? isLoadingHomePhoto : isLoadingMainPhoto) ? (
               <Ring />
             ) : (
@@ -366,13 +360,13 @@ function CityResultVertical({
           </div>
 
           {/* Row 2 */}
-          <div className="">
+          <div className="w-full flex sm:flex-col lg:col-span-2 sm:items-start sm:justify-start col-span-2 sm:col-span-1 justify-between items-center mb-4 lg:mb-0 lg:items-start order-1 lg:order-2">
             <h2 className="text-2xl font-extrabold">{name}</h2>
             <h3 className="text-gray-500">{countryName}</h3>
           </div>
 
           {/* Row 3 */}
-          <div className="flex items-center h-36">
+          <div className="flex col-span-2 items-center h-28 lg:h-36 order-3">
             {isHome ? (
               <div className="flex items-center space-x-4 font-semibold text-blue-500 my-4 text-xl font-sans">
                 <RiUserLocationLine
@@ -386,7 +380,7 @@ function CityResultVertical({
                 </p>
               </div>
             ) : (
-              <div className="text-xl font-semibold">
+              <div className="flex w-full lg:flex-col text:sm lg:text-lg overflow-hidden">
                 {/* {isFarPlace ? (
                 <div className="bg-yellow-500 p-2 rounded-full flex justify-center items-center font-semibold space-x-2 text-gray-900 mb-3">
                   <BiBadgeCheck />
@@ -402,16 +396,19 @@ function CityResultVertical({
                   href={flightLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                  className="w-full flex flex-col lg:flex-row justify-center lg:justify-start items-center text-center lg:text-left lg:whitespace-nowrap lg:space-x-4 py-2 hover:text-blue-500 group hover:underline space-y-2 lg:space-y-0"
                 >
-                  <RiPlaneLine size={26} />
+                  <RiPlaneLine size={26} className="shrink-0" />
                   <p className="text-gray-500 group-hover:text-blue-500">
                     {isLoadingFlights ? (
                       <div className="w-full text-gray-500">
                         <Ring size={16} />
                       </div>
                     ) : flights && flights.length > 0 ? (
-                      secondsToDhm((flights[0]?.duration ?? 0) * 60) ?? "N/A"
+                      <p className="">
+                        {secondsToDhm((flights[0]?.duration ?? 0) * 60) ??
+                          "N/A"}
+                      </p>
                     ) : (
                       <p className="text-gray-500 group-hover:text-blue-500">
                         No flight routes
@@ -423,15 +420,15 @@ function CityResultVertical({
                   href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=transit`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                  className="w-full flex flex-col lg:flex-row justify-center lg:justify-start items-center text-center lg:text-left lg:whitespace-nowrap lg:space-x-4 py-2 hover:text-blue-500 group hover:underline space-y-2 lg:space-y-0"
                 >
-                  <RiTrainLine size={26} />
+                  <RiTrainLine size={26} className="shrink-0" />
                   {isLoadingTransitTime ? (
                     <div className="w-full text-gray-500">
                       <Ring size={16} />
                     </div>
                   ) : transitTime ? (
-                    <p className="text-gray-500 group-hover:text-blue-500">
+                    <p className="text-gray-500 group-hover:text-blue-500 text-center">
                       {transitTime}
                     </p>
                   ) : null}
@@ -440,15 +437,15 @@ function CityResultVertical({
                   href={`https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLong}&destination=${lat},${lon}&travelmode=driving`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full flex items-center space-x-4 my-2 hover:text-blue-500 group hover:underline"
+                  className="w-full flex flex-col lg:flex-row justify-center lg:justify-start items-center text-center lg:text-left lg:whitespace-nowrap lg:space-x-4 py-2 hover:text-blue-500 group hover:underline space-y-2 lg:space-y-0"
                 >
-                  <RiCarLine size={26} />
+                  <RiCarLine size={26} className="shrink-0" />
                   {isLoadingDriveTime ? (
                     <div className="w-full text-gray-500">
                       <Ring size={16} />
                     </div>
                   ) : driveTime ? (
-                    <p className="text-gray-500 group-hover:text-blue-500">
+                    <p className="text-gray-500 group-hover:text-blue-500 text-center">
                       {driveTime}
                     </p>
                   ) : null}
@@ -457,58 +454,37 @@ function CityResultVertical({
             )}
           </div>
 
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className={`flex sm:hidden justify-center items-center text-sm border ${
-              expanded
-                ? "bg-blue-100 text-blue-500 hover:bg-blue-200 transition ease-in-out"
-                : "bg-blue-500 text-white hover:bg-blue-600 transition ease-in-out"
-            } font-bold p-4 rounded-4 rounded`}
-          >
-            {expanded ? (
-              <BsChevronUp className="mr-2" />
-            ) : (
-              <BsChevronDown className="mr-2" />
-            )}
-            {expanded ? "Collapse" : "Expand"}
-            {expanded ? (
-              <BsChevronUp className="ml-2" />
-            ) : (
-              <BsChevronDown className="ml-2" />
-            )}
-          </button>
-
           {weather ? (
             <div
-              className={`${
-                expanded ? "row-span-1" : "hidden"
-              } sm:row-span-1 sm:flex sm:flex-col`}
+              className={`w-full col-span-2 flex justify-center lg:flex-col row-span-1 gap-2 order-4`}
               ref={weatherCellsRef}
             >
-              {weather.map(
-                (
-                  {
-                    date,
-                    temp_c,
-                    temp_max_c,
-                    temp_min_c,
-                    condition,
-                    conditionCode,
-                  },
-                  i
-                ) => (
-                  <WeatherCellNew
-                    key={i}
-                    date={date}
-                    avg={temp_c}
-                    low={temp_min_c}
-                    high={temp_max_c}
-                    text={condition}
-                    conditionCode={conditionCode}
-                    isCurrentDay={i == 0 ? true : false}
-                  />
-                )
-              )}
+              {weather
+                .slice(0, 7)
+                .map(
+                  (
+                    {
+                      date,
+                      temp_c,
+                      temp_max_c,
+                      temp_min_c,
+                      condition,
+                      conditionCode,
+                    },
+                    i
+                  ) => (
+                    <WeatherCellNew
+                      key={i}
+                      date={date}
+                      avg={temp_c}
+                      low={temp_min_c}
+                      high={temp_max_c}
+                      text={condition}
+                      conditionCode={conditionCode}
+                      isCurrentDay={i == 0 ? true : false}
+                    />
+                  )
+                )}
 
               {/* {isFutureForecast && cityForecastFuture?.forecastArray ? (
               cityForecastFuture.forecastArray.map(

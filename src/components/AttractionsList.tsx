@@ -45,13 +45,13 @@ function AttractionsList({ lat, long }: Props) {
           }) => (
             <div
               key={placeId}
-              className="flex justify-between w-full bg-white rounded-lg shadow p-4 hover:bg-gray-100 cursor-pointer transform transition ease-in-out"
+              className="flex flex-col sm:flex-row sm:justify-between w-full bg-white rounded-lg shadow p-4 hover:bg-gray-100 cursor-pointer transform transition ease-in-out"
             >
-              <div className="flex space-x-5">
+              <div className="flex flex-col sm:flex-row sm:space-x-5">
                 <img
                   src={photo != "" ? photo : "/no-image-placeholder.jpg"}
                   alt={name}
-                  className="h-32 w-32 object-cover rounded-lg"
+                  className="w-full h-32 sm:w-32 object-cover rounded-lg mb-3 sm:mb-0"
                 />
                 <div className="flex flex-col justify-between">
                   <div>
@@ -62,7 +62,7 @@ function AttractionsList({ lat, long }: Props) {
                       </p>
                     )}
                   </div>
-                  <div>
+                  <div className="my-4">
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${lat}%2C${long}&query_place_id=${placeId}`}
                       target="_blank"
@@ -74,7 +74,7 @@ function AttractionsList({ lat, long }: Props) {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col space-y-4 pt-3">
+              <div className="hidden sm:flex flex-col space-y-4 pt-3">
                 {rating > 0 && (
                   <div>
                     <div className="flex items-center space-x-2">
