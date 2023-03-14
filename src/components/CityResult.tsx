@@ -401,7 +401,7 @@ function CityResultVertical({
                   <RiPlaneLine size={26} className="shrink-0" />
                   <p className="text-gray-500 group-hover:text-blue-500">
                     {isLoadingFlights ? (
-                      <div className="w-full text-gray-500">
+                      <div className="w-full flex justify-center items-center text-gray-500">
                         <Ring size={16} />
                       </div>
                     ) : flights && flights.length > 0 ? (
@@ -424,7 +424,7 @@ function CityResultVertical({
                 >
                   <RiTrainLine size={26} className="shrink-0" />
                   {isLoadingTransitTime ? (
-                    <div className="w-full text-gray-500">
+                    <div className="w-full flex justify-center items-center text-gray-500">
                       <Ring size={16} />
                     </div>
                   ) : transitTime ? (
@@ -441,7 +441,7 @@ function CityResultVertical({
                 >
                   <RiCarLine size={26} className="shrink-0" />
                   {isLoadingDriveTime ? (
-                    <div className="w-full text-gray-500">
+                    <div className="w-full flex justify-center items-center text-gray-500">
                       <Ring size={16} />
                     </div>
                   ) : driveTime ? (
@@ -454,9 +454,9 @@ function CityResultVertical({
             )}
           </div>
 
-          {weather ? (
+          {weather && (
             <div
-              className={`w-full col-span-2 flex justify-center lg:flex-col row-span-1 gap-2 order-4`}
+              className={`col-span-2 flex overflow-x-auto lg:justify-center lg:flex-col gap-2 order-4`}
               ref={weatherCellsRef}
             >
               {weather
@@ -571,7 +571,7 @@ function CityResultVertical({
               {!isExtended ? <BiChevronsDown /> : <BiChevronsUp />}
             </button> */}
             </div>
-          ) : null}
+          )}
 
           {/* Old Version with openweathermap */}
           {/* {isLoading ? <Ring /> : <div className="row-span-1">{forecast && forecast.map(({ temp, tempMin, tempMax, feelsLike, humidity, windSpeed, description, icon, timestamp }, i) => <WeatherCell key={i} temp={temp} tempMin={tempMin} tempMax={tempMax} feelsLike={feelsLike} humidity={humidity} windSpeed={windSpeed} description={description} icon={icon} timestamp={timestamp} />)}</div>} */}

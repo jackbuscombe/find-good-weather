@@ -283,7 +283,7 @@ export default function LocationModal() {
 
                     {/* Row 2 */}
                     <div
-                      className="w-full flex my-5"
+                      className="w-full flex my-5 overflow-hidden"
                       ref={datepickerWrapperRef}
                     >
                       <SearchFormField
@@ -294,13 +294,13 @@ export default function LocationModal() {
                       >
                         <Popover>
                           <Popover.Button>
-                            <div className="flex items-center font-mono outline-none border-none">
+                            <div className="flex items-center font-mono outline-none border-none overflow-x-auto">
                               <input
                                 placeholder={`${format(
                                   startDate,
                                   "dd MMM yy"
                                 )} - ${format(endDate, "dd MMM yy")}`}
-                                className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer"
+                                className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-xs lg:text-lg cursor-pointer"
                                 type="text"
                               />
                               <BiChevronDown
@@ -348,7 +348,7 @@ export default function LocationModal() {
                     </div>
 
                     {/* Row 3 - Weather */}
-                    <div className="flex w-full justify-center space-x-4">
+                    <div className="flex w-full overflow-x-auto justify-center space-x-4">
                       <div className="hidden lg:flex items-center bg-gray-100 shadow rounded p-2 my-2 cursor-pointer hover:bg-gray-200">
                         <FiChevronLeft />
                       </div>
@@ -390,12 +390,12 @@ export default function LocationModal() {
                       selectedIndex={selectedIndex}
                       onChange={setSelectedIndex}
                     >
-                      <Tab.List className="flex space-x-1 rounded-xl p-1 mb-6">
+                      <Tab.List className="flex overflow-x-auto space-x-1 rounded-xl p-1 mb-6">
                         {Object.keys(categories).map((category) => (
                           <Tab
                             key={category}
                             className={({ selected }) =>
-                              `w-full rounded-lg py-2.5 text-sm lg:text-lg font-extrabold leading-5 transition focus:outline-none ${
+                              `w-full rounded-lg py-2.5 text-xs lg:text-lg font-extrabold leading-5 transition focus:outline-none ${
                                 selected
                                   ? "bg-blue-100 text-blue-500 hover:bg-blue-200 shadow"
                                   : "bg-white text-gray-600 hover:bg-gray-200"
@@ -406,7 +406,7 @@ export default function LocationModal() {
                           </Tab>
                         ))}
                       </Tab.List>
-                      <Tab.Panels className="mt-2">
+                      <Tab.Panels className="w-full mt-2 overflow-x-auto">
                         {selectedIndex === 0 ? (
                           <AttractionsList lat={lat} long={long} />
                         ) : selectedIndex == 1 ? (

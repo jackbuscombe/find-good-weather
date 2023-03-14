@@ -279,9 +279,11 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex flex-col items-center py-12 bg-cover min-h-screen dark:bg-gray-900">
+      <main className="flex flex-col items-center py-12 bg-cover min-h-screen dark:bg-gray-900 px-2">
         {/* Form */}
-        <div ref={searchFormRef}>{isLoaded && <SearchFormCallback />}</div>
+        <div className="" ref={searchFormRef}>
+          {isLoaded && <SearchFormCallback />}
+        </div>
 
         {nearbyCities && farPlaces && (
           <div className="w-11/12 xl:w-3/4 flex flex-col md:flex-row justify-between items-center mt-3 font-mono space-x-6 text-lg my-4">

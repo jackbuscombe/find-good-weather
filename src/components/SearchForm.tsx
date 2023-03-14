@@ -142,7 +142,7 @@ function SearchForm({ className, refetch }: Props) {
   }, [startDate]);
 
   return (
-    <div className="relative z-30 px-4">
+    <div className="relative z-30">
       <div
         className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 items-center md:border-2 p-4 rounded-lg font-mono md:shadow-sm bg-white whitespace-nowrap ${className}`}
       >
@@ -243,7 +243,6 @@ function SearchForm({ className, refetch }: Props) {
             </Popover>
           </SearchFormField>
         </div>
-
         <Popover className="relative flex items-center">
           {({ open }) => (
             <>
