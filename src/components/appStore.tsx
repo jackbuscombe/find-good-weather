@@ -54,6 +54,7 @@ type State = {
   currentAirportIata: string;
   selectedAirportIata: string;
   maxDistanceKms: number;
+  isMainBackdropOn: boolean;
   setSelectedCityGeonameId: (id: string) => void;
   setSelectedCityName: (cityName: string) => void;
   setSelectedCountryName: (countryName: string) => void;
@@ -89,6 +90,7 @@ type State = {
   setCurrentAirportIata: (currentAirportIata: string) => void;
   setSelectedAirportIata: (selectedAirportIata: string) => void;
   setMaxDistanceKms: (distance: number) => void;
+  setIsMainBackdropOn: (isOn: boolean) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -127,6 +129,7 @@ export const useStore = create<State>((set) => ({
   currentAirportIata: "",
   selectedAirportIata: "",
   maxDistanceKms: 5000,
+  isMainBackdropOn: false,
   setSelectedCityGeonameId: (id) => set({ selectedCityGeonameId: id }),
   setSelectedCityName: (cityName) => set({ selectedCityName: cityName }),
   setSelectedCountryName: (countryName) =>
@@ -170,4 +173,5 @@ export const useStore = create<State>((set) => ({
   setCurrentAirportIata: (currentAirportIata) => set({ currentAirportIata }),
   setSelectedAirportIata: (selectedAirportIata) => set({ selectedAirportIata }),
   setMaxDistanceKms: (distance) => set({ maxDistanceKms: distance }),
+  setIsMainBackdropOn: (isOn) => set({ isMainBackdropOn: isOn }),
 }));

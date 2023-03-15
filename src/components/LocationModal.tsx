@@ -298,8 +298,8 @@ export default function LocationModal() {
                               <input
                                 placeholder={`${format(
                                   startDate,
-                                  "dd MMM yy"
-                                )} - ${format(endDate, "dd MMM yy")}`}
+                                  "dd MMM"
+                                )} - ${format(endDate, "dd MMM")}`}
                                 className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-xs lg:text-lg cursor-pointer"
                                 type="text"
                               />

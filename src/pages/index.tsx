@@ -22,6 +22,7 @@ import SortBySelect from "../components/UIComponents/SortBySelect";
 import CityResult from "../components/CityResult";
 import LocationModal from "../components/LocationModal";
 import { GeonameResult, WeatherApiWeatherObject } from "../types";
+import { Transition } from "@headlessui/react";
 
 const Home: NextPage = () => {
   const isViewingHome = useStore((state) => state.isViewingHome);
@@ -49,6 +50,8 @@ const Home: NextPage = () => {
   const setIsViewingHome = useStore((state) => state.setIsViewingHome);
   const viewType = useStore((state) => state.viewType);
   const maxDistanceKms = useStore((state) => state.maxDistanceKms);
+  const isMainBackdropOn = useStore((state) => state.isMainBackdropOn);
+  const setIsMainBackdropOn = useStore((state) => state.setIsMainBackdropOn);
   const [isDatepickerOpen, setIsDatepickerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [directionsResponse, setDirectionsResponse] =
@@ -134,6 +137,11 @@ const Home: NextPage = () => {
     setSearchedCityLat(userLat);
     setSearchedCityLong(userLong);
   }, [userLat, userLong]);
+
+  useEffect(() => {
+    if (!searchedCityLat || !searchedCityLong) return;
+    setTableResultsWithGoodWeather([]);
+  }, [searchedCityLat, searchedCityLong]);
 
   // useEffect(() => {
   //   if (!searchedCityLat || !searchedCityLong) return;
@@ -402,6 +410,20 @@ const Home: NextPage = () => {
 					</div>
 				)} */}
         <LocationModal />
+        <Transition
+          show={isMainBackdropOn}
+          enter="transition-opacity duration-150"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition-opacity duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div
+            onClick={() => setIsMainBackdropOn(false)}
+            className="fixed top-0 left-0 h-screen w-screen bg-black opacity-60"
+          />
+        </Transition>
       </main>
     </>
   );
