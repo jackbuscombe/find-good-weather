@@ -145,7 +145,7 @@ function SearchForm({ className, refetch }: Props) {
   }, [startDate]);
 
   return (
-    <div className="relative z-30">
+    <div className="w-60 sm:w-full relative z-20">
       <div
         className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 items-center md:border-2 p-4 rounded-lg font-mono md:shadow-sm bg-white whitespace-nowrap ${className}`}
       >
@@ -156,7 +156,7 @@ function SearchForm({ className, refetch }: Props) {
               <MdOutlineLocationOn className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />
             }
           >
-            <Popover className="relative">
+            <Popover className="">
               {({ open, close }) => (
                 <>
                   <Autocomplete
@@ -202,7 +202,7 @@ function SearchForm({ className, refetch }: Props) {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <div className="w-[350px] lg:w-[500px] shrink-0 bg-white p-6 shadow-xl rounded-xl absolute z-10 border">
+                    <div className="w-3/4 sm:w-full md:w-[350px] lg:w-[500px] bg-white p-6 shadow-xl rounded-xl absolute z-50 border text-sm md:text-lg">
                       <p className="font-bold text-lg mb-4">Search a region</p>
 
                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
@@ -303,8 +303,6 @@ function SearchForm({ className, refetch }: Props) {
                           <p>United States</p>
                         </div>
                       </div>
-
-                      <img src="/solutions.jpg" alt="" />
                     </div>
                   </Transition>
                 </>
@@ -317,17 +315,18 @@ function SearchForm({ className, refetch }: Props) {
 					<SearchFieldDesiredWeather options={["clear", "rainy", "snow"]} />
 				</SearchFormField> */}
 
-        <div>
+        <div className="flex space-x-2 sm:space-x-4">
           <SearchFormField
             title="When"
             icon={
-              <AiOutlineCalendar className="text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />
+              <AiOutlineCalendar className="text-lg lg:text-4xl text-yellow-500 md:inline-flex cursor-pointer md:mx-2" />
             }
           >
-            <Popover className={`z-50`}>
+            <Popover className={``}>
               {({ open }) => (
                 <>
                   <Popover.Button
+                    className=""
                     onClick={() =>
                       !open
                         ? setIsMainBackdropOn(true)
@@ -340,11 +339,11 @@ function SearchForm({ className, refetch }: Props) {
                           endDate,
                           "dd MMM"
                         )}`}
-                        className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black text-lg cursor-pointer"
+                        className="border-none outline-none bg-transparent flex-grow text-black font-bold placeholder-black cursor-pointer text-xs sm:text-lg w-24 sm:w-40"
                         type="text"
                       />
                       <BiChevronDown
-                        className="h-5 w-5 text-gray-400 ml-2"
+                        className="hidden sm:flex h-5 w-5 text-gray-400 ml-2"
                         aria-hidden="true"
                       />
                     </div>
@@ -389,31 +388,33 @@ function SearchForm({ className, refetch }: Props) {
               )}
             </Popover>
           </SearchFormField>
-        </div>
-        <Popover className="relative flex items-center">
-          {({ open }) => (
-            <>
-              <Popover.Button
-                onClick={() =>
-                  !open ? setIsMainBackdropOn(true) : setIsMainBackdropOn(false)
-                }
-              >
-                <div
-                  className={`text-gray-500 ${
-                    open
-                      ? "bg-yellow-400 hover:bg-yellow-500 text-white"
-                      : "bg-gray-100 hover:bg-gray-200"
-                  } text-2xl p-4 cursor-pointer`}
+          <Popover className="flex items-center">
+            {({ open }) => (
+              <>
+                <Popover.Button
+                  onClick={() =>
+                    !open
+                      ? setIsMainBackdropOn(true)
+                      : setIsMainBackdropOn(false)
+                  }
                 >
-                  {open ? <RiCloseLine /> : <RiSettingsLine />}
-                </div>
-              </Popover.Button>
-              <Popover.Panel className="absolute z-10">
-                <SettingsDropdown />
-              </Popover.Panel>
-            </>
-          )}
-        </Popover>
+                  <div
+                    className={`text-gray-500 ${
+                      open
+                        ? "bg-yellow-400 hover:bg-yellow-500 text-white"
+                        : "bg-gray-100 hover:bg-gray-200"
+                    } text-2xl p-4 cursor-pointer`}
+                  >
+                    {open ? <RiCloseLine /> : <RiSettingsLine />}
+                  </div>
+                </Popover.Button>
+                <Popover.Panel className="absolute z-10">
+                  <SettingsDropdown />
+                </Popover.Panel>
+              </>
+            )}
+          </Popover>
+        </div>
 
         <Tooltip
           label="Algorithm draws nearby cities with a population over 100,000"

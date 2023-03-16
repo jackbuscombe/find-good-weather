@@ -32,10 +32,10 @@ function SettingsDropdown() {
   };
 
   return (
-    <div className="absolute grid grid-cols-2 md:grid-cols-4 shadow border rounded p-12 bg-white left-1/2 z-10 mt-10 w-screen max-w-sm -translate-x-1/2 transform lg:max-w-3xl">
+    <div className="absolute grid grid-cols-2 lg:grid-cols-4 shadow border rounded p-4 sm:p-12 bg-white left-1/2 z-10 mt-10 w-60 md:w-screen max-w-sm -translate-x-1/2 lg:-translate-x-3/4 transform lg:max-w-3xl text-sm sm:text-lg">
       {/* <div className="w-full absolute grid grid-cols-2 md:grid-cols-4 bg-white border shadow rounded z-50 p-12 mt-2"> */}
       <div className="col-span-2 md:col-span-1">
-        <h2 className="text-2xl font-bold font-mono">Settings</h2>
+        <h2 className="text-lg sm:text-2xl font-bold font-mono">Settings</h2>
       </div>
       <div>
         <p className="text-lg font-semibold mb-4">View type</p>
